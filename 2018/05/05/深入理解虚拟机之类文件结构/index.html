@@ -42,6 +42,15 @@
 <body>
 <div class="side-navigate hide-area">
   
+    <div class="item prev">
+      <a href="/2018/05/05/深入理解虚拟机之虚拟机类加载机制/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        深入理解虚拟机之虚拟机类加载机制
+      </div>
+    </div>
+  
   
     <div class="item next">
       <a href="/2018/05/05/深入理解虚拟机之虚拟机性能监控和故障处理工具/">
@@ -118,12 +127,12 @@
   <article id="post">
     <h1>深入理解虚拟机之类文件结构</h1>
     <p class="page-title-sub">
-      <span id = "post-title-date">Created at 2018-05-05</span>
+      <span id = "post-title-date">撰写于 2018-05-05</span>
       
-        <span id = "post-title-updated">Updated at 2018-05-05</span>
+        <span id = "post-title-updated">修改于 2018-05-05</span>
       
       
-      <span id = "post-title-categories">Category
+      <span id = "post-title-categories">分类
       
       
         
@@ -134,7 +143,7 @@
       
       
       <span id = "post-title-tags">
-      Tag
+      标签
       
       
         
@@ -197,10 +206,10 @@
 
   </article>
   <div class="random-toc-area">
-  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
-  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">隐藏目录</button>
   <div class="random-toc">
-    <h2>Table of Content</h2>
+    <h2>目录</h2>
     <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-概述"><span class="toc-text">1 概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Class类文件结构"><span class="toc-text">2  Class类文件结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-魔数与Class文件版本"><span class="toc-text">2.1 魔数与Class文件版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-常量池"><span class="toc-text">2.2 常量池</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3访问标志"><span class="toc-text">2.3访问标志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-类索引、父类索引与接口索引集合"><span class="toc-text">2.4 类索引、父类索引与接口索引集合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-字段表集合"><span class="toc-text">2.5 字段表集合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6方法表集合"><span class="toc-text">2.6方法表集合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-7-属性表结合"><span class="toc-text">2.7 属性表结合</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-字节码指令简介"><span class="toc-text">3 字节码指令简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1字节码与数据类型"><span class="toc-text">3.1字节码与数据类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-加载和存储指令"><span class="toc-text">3.2 加载和存储指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-运算指令"><span class="toc-text">3.3 运算指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-类型转换指令"><span class="toc-text">3.4 类型转换指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-对象创建与访问指令"><span class="toc-text">3.5 对象创建与访问指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-6-操作数栈管理指令"><span class="toc-text">3.6 操作数栈管理指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-7-控制转移指令"><span class="toc-text">3.7 控制转移指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-8-方法调用和返回指令"><span class="toc-text">3.8 方法调用和返回指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-9-异常处理指令"><span class="toc-text">3.9 异常处理指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-10-同步指令"><span class="toc-text">3.10 同步指令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-虚拟机实现的两种方式"><span class="toc-text">4 虚拟机实现的两种方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-class文件结构的发展"><span class="toc-text">5 class文件结构的发展</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结："><span class="toc-text">总结：</span></a></li></ol>
   </div>
 </div>
@@ -208,11 +217,13 @@
   
 <nav id="pagination">
   
-
+    <a href="/2018/05/05/深入理解虚拟机之虚拟机类加载机制/" class="prev">&larr; 上一篇 深入理解虚拟机之虚拟机类加载机制</a>
   
 
   
-    <a href="/2018/05/05/深入理解虚拟机之虚拟机性能监控和故障处理工具/" class="next">Next post 深入理解虚拟机之虚拟机性能监控和故障处理工具 &rarr;</a>
+
+  
+    <a href="/2018/05/05/深入理解虚拟机之虚拟机性能监控和故障处理工具/" class="next">下一篇 深入理解虚拟机之虚拟机性能监控和故障处理工具 &rarr;</a>
   
 </nav>
 
