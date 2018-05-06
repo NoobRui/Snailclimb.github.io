@@ -129,12 +129,12 @@
   <article id="post">
     <h1>深入理解虚拟机之虚拟机类加载机制</h1>
     <p class="page-title-sub">
-      <span id = "post-title-date">撰写于 2018-05-05</span>
+      <span id = "post-title-date">Created at 2018-05-05</span>
       
-        <span id = "post-title-updated">修改于 2018-05-05</span>
+        <span id = "post-title-updated">Updated at 2018-05-05</span>
       
       
-      <span id = "post-title-categories">分类
+      <span id = "post-title-categories">Category
       
       
         
@@ -145,7 +145,7 @@
       
       
       <span id = "post-title-tags">
-      标签
+      Tag
       
       
         
@@ -249,10 +249,10 @@
 
   </article>
   <div class="random-toc-area">
-  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
-  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">隐藏目录</button>
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
   <div class="random-toc">
-    <h2>目录</h2>
+    <h2>Table of Content</h2>
     <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言："><span class="toc-text">前言：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-概述"><span class="toc-text">1 概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-虚拟机类加载机制的概念"><span class="toc-text">1.1 虚拟机类加载机制的概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-Java语言的动态加载和动态连接"><span class="toc-text">1.2 Java语言的动态加载和动态连接</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-类加载时机"><span class="toc-text">2 类加载时机</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-类加载过程"><span class="toc-text">3 类加载过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-加载"><span class="toc-text">3.1 加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-验证"><span class="toc-text">3.2 验证</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-1-文件格式验证"><span class="toc-text">3.2.1 文件格式验证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-2-元数据验证"><span class="toc-text">3.2.2 元数据验证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-3-字节码验证"><span class="toc-text">3.2.3 字节码验证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-4-符号引用验证"><span class="toc-text">3.2.4 符号引用验证</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-准备"><span class="toc-text">3.3 准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-解析"><span class="toc-text">3.4 解析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-4-1-看两者的概念。"><span class="toc-text">3.4.1 看两者的概念。</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-4-2-对解析结果进行缓存"><span class="toc-text">3.4.2 对解析结果进行缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-4-3-解析动作的目标"><span class="toc-text">3.4.3 解析动作的目标</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-初始化"><span class="toc-text">3.5 初始化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-类加载器"><span class="toc-text">4 类加载器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1、类与类加载器"><span class="toc-text">4.1、类与类加载器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-类加载器介绍"><span class="toc-text">4.2 类加载器介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-双亲委派模型"><span class="toc-text">4.3 双亲委派模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-破坏双亲委派模型"><span class="toc-text">4.4 破坏双亲委派模型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结："><span class="toc-text">总结：</span></a></li></ol>
   </div>
 </div>
@@ -264,7 +264,7 @@
   
 
   
-    <a href="/2018/05/05/深入理解虚拟机之类文件结构/" class="next">下一篇 深入理解虚拟机之类文件结构 &rarr;</a>
+    <a href="/2018/05/05/深入理解虚拟机之类文件结构/" class="next">Next post 深入理解虚拟机之类文件结构 &rarr;</a>
   
 </nav>
 
