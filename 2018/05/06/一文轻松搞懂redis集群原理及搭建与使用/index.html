@@ -1,0 +1,426 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="今天早上由于zookeeper和redis集群不在同一虚拟机导致出了点很小错误（人为），所以这里总结一下redis集群的搭建以便日后所需同时也希望能对你有所帮助。笔主这里使用的是Centos7.如果你碰到任何问题都可以来问我，留言或者加我微信：bwcx9393.
+关于Linux的一些资料链接：https://pan.baidu.com/s/1Opgu6kQe_b1IRJbxTGD6XA 密码...">
+  
+  <title>一文轻松搞懂redis集群原理及搭建与使用 [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2018/05/05/深入理解虚拟机之虚拟机类加载机制/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        深入理解虚拟机之虚拟机类加载机制
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>一文轻松搞懂redis集群原理及搭建与使用</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2018-05-06</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-06</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/redis/">redis</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/redis/">redis</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/java/">java</a>
+      
+      </span>
+      
+    </p>
+    
+    <p>今天早上由于zookeeper和redis集群不在同一虚拟机导致出了点很小错误（人为），所以这里总结一下redis集群的搭建以便日后所需同时也希望能对你有所帮助。<br>笔主这里使用的是Centos7.如果你碰到任何问题都可以来问我，留言或者加我微信：bwcx9393.</p>
+<p>关于Linux的一些资料<br>链接：<a href="https://pan.baidu.com/s/1Opgu6kQe_b1IRJbxTGD6XA" target="_blank" rel="noopener">https://pan.baidu.com/s/1Opgu6kQe_b1IRJbxTGD6XA</a> 密码：8yk4</p>
+<h2 id="一-redis的安装"><a href="#一-redis的安装" class="headerlink" title="一  redis的安装"></a>一  redis的安装</h2><p>Redis是c语言开发的。<br>安装redis需要c语言的编译环境。如果没有gcc需要在线安装：<strong>yum install gcc-c++</strong></p>
+<p><strong>第一步</strong>：获取源码包：<strong>wget <a href="http://download.redis.io/releases/redis-3.0.0.tar.gz" target="_blank" rel="noopener">http://download.redis.io/releases/redis-3.0.0.tar.gz</a></strong></p>
+<p><strong>第二步</strong>：解压缩redis：<strong>tar zxvf redis-3.0.0.tar.gz</strong></p>
+<p><strong>第三步</strong>：编译。进入redis源码目录(<strong>cd redis-3.0.0</strong>)。执行 <strong>make</strong></p>
+<p><strong>第四步</strong>：安装。<strong>make install PREFIX=/usr/local/redis</strong></p>
+<p>PREFIX参数指定redis的安装目录。一般软件安装到/usr目录下</p>
+<p>这样Redis就成功装在了我们的usr/local/redis目录下。</p>
+<p><strong>第五步</strong>：设置后台启动：<br>[root@localhost redis-3.0.0]# cp redis.conf /usr/local/redis/bin/<br>（把/root/redis-3.0.0/redis.conf复制到/usr/local/redis/bin目录下）</p>
+<p>修改配置文件：把<strong>daemonize</strong>后面的参数改为<strong>yes</strong><br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d13de47e2e1a9?w=466&amp;h=188&amp;f=png&amp;s=12677" alt="修改配置文件："></p>
+<p><strong>测试启动：</strong>[root@localhost bin]# <strong>./redis-server redis.conf</strong></p>
+<p><strong>查看redis进程：</strong><br>[root@localhost bin]# <strong>ps aux|grep redis</strong></p>
+<h2 id="二-redis集群的搭建"><a href="#二-redis集群的搭建" class="headerlink" title="二  redis集群的搭建"></a>二  redis集群的搭建</h2><h3 id="2-1-redis集群-redis-cluster-原理"><a href="#2-1-redis集群-redis-cluster-原理" class="headerlink" title="2.1 redis集群(redis-cluster)原理"></a>2.1 redis集群(redis-cluster)原理</h3><p>3.0版本之前的redis是不支持集群的，3.0版本之前想要搭建redis集群的话需要中间件来找到存值和取值的对应节点。</p>
+<h4 id="3-0版本以后的redis集群架构图："><a href="#3-0版本以后的redis集群架构图：" class="headerlink" title="3.0版本以后的redis集群架构图："></a>3.0版本以后的redis集群架构图：</h4><p><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d14e9bc73a5f2?w=818&amp;h=565&amp;f=jpeg&amp;s=42554" alt="3.0版本以后的redis集群架构图"></p>
+<h4 id="那么这是如何实现的呢？？？"><a href="#那么这是如何实现的呢？？？" class="headerlink" title="那么这是如何实现的呢？？？"></a><strong>那么这是如何实现的呢？？？</strong></h4><p>Redis 集群中内置了 <strong>16384</strong>个哈希槽，当需要在 Redis 集群中放置一个 key-value 时，redis 先对 key 使用 crc16 算法算出一个结果，然后把结果对 16384 求余数，这样每个 key 都会对应一个编号在 <strong>0-16383</strong> 之间的哈希槽，redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。</p>
+<p>根据下图应该更容易理解了。（图片来源：<a href="http://www.cnblogs.com/liyasong/p/redis_jiqun.html）" target="_blank" rel="noopener">http://www.cnblogs.com/liyasong/p/redis_jiqun.html）</a><br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d1542a72fc4b7?w=933&amp;h=428&amp;f=png&amp;s=33614" alt="集群原理"></p>
+<h4 id="redis集群投票机制"><a href="#redis集群投票机制" class="headerlink" title="redis集群投票机制"></a>redis集群投票机制</h4><p>redis集群中有多台redis服务器不可避免会有服务器挂掉。redis集群服务器之间通过互相的ping-pong判断是否节点可以连接上。如果有一半以上的节点去ping一个节点的时候没有回应，集群就认为这个节点宕机了。</p>
+<p>上面就是我们常说的为了容错而生的<strong>redis集群投票机制</strong>。<br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d1591bfce8e5d?w=436&amp;h=356&amp;f=png&amp;s=151952" alt="redis集群投票机制"></p>
+<h3 id="2-2-redis集群-redis-cluster-的搭建"><a href="#2-2-redis集群-redis-cluster-的搭建" class="headerlink" title="2.2 redis集群(redis-cluster)的搭建"></a>2.2 redis集群(redis-cluster)的搭建</h3><p>redis集群搭建起来很简单，我们这里用一台虚拟机模拟搭建包含6个redis服务器的集群，实际工作中与使用多台服务器搭建是一个操作。</p>
+<p>我们上面已经装好了一个redis实例，现在我们需要把它复制6份并修改相应端口。</p>
+<p><strong>第一步： 新建redis-cluster文件夹</strong><br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d15ddded18e40?w=298&amp;h=277&amp;f=png&amp;s=11126" alt="新建redis-cluster文件夹"></p>
+<p><strong>第二步：复制redis实例</strong></p>
+<p>[root@Snailclimb local]# <strong>cp redis/bin redis-cluster/redis1</strong></p>
+<p>如果你复制过去的redis实例有dump.rdb文件的话最好也要删除。<br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d16105506c5e4?w=287&amp;h=205&amp;f=jpeg&amp;s=14210" alt=""></p>
+<p><strong>第三步：修改配置文件</strong></p>
+<p>修改bin目录下的redis.conf配置文件<br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d162bab1e3542?w=608&amp;h=282&amp;f=jpeg&amp;s=18706" alt="修改配置文件"></p>
+<p><strong>第四步：继续复制5个redis实例</strong></p>
+<p>我们用上面的redis实例复制5个redis实例，然后把他们的配置文件的端口号改为7002-7006</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d164c0dd22fbb?w=292&amp;h=164&amp;f=jpeg&amp;s=9848" alt="继续复制5个redis实例"></p>
+<p><strong>第五步 ：新建一个执行脚本：</strong><br>[root@Snailclimb redis-cluster]# vim start-all.sh<br>脚本内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">cd redis1/bin</span><br><span class="line">./redis-server redis.conf</span><br><span class="line">cd ..</span><br><span class="line">cd ..</span><br><span class="line">cd redis2/bin</span><br><span class="line">./redis-server redis.conf</span><br><span class="line">cd ..</span><br><span class="line">cd ..</span><br><span class="line">cd redis3/bin</span><br><span class="line">./redis-server redis.conf</span><br><span class="line">cd ..</span><br><span class="line">cd ..</span><br><span class="line">cd redis4/bin</span><br><span class="line">./redis-server redis.conf</span><br><span class="line">cd ..</span><br><span class="line">cd ..</span><br><span class="line">cd redis5/bin</span><br><span class="line">./redis-server redis.conf</span><br><span class="line">cd ..</span><br><span class="line">cd ..</span><br><span class="line">cd redis6/bin</span><br><span class="line">./redis-server redis.conf</span><br></pre></td></tr></table></figure></p>
+<p><strong>为脚本赋予执行权限:</strong></p>
+<p>[root@Snailclimb redis-cluster]# <strong>chmod u+x start-all.sh</strong></p>
+<p><strong>同时启动6个redis实例:</strong></p>
+<p>[root@Snailclimb redis-cluster]# .<strong>/start-all.sh</strong></p>
+<p><strong>第六步：将redis-trib.rb复制到redis-cluster目录下面：</strong></p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d16871341491e?w=447&amp;h=328&amp;f=png&amp;s=24738" alt="将redis-trib.rb复制到redis-cluster目录下面"><br><strong>并为脚本赋予执行权限：</strong><br>[root@Snailclimb redis-cluster]# <strong>chmod u+x redis-trib.rb</strong></p>
+<p><strong>第七步：安装ruby和ruby运行环境</strong></p>
+<p><strong>yum install ruby</strong></p>
+<p><strong>yum install rubygems</strong></p>
+<p><strong>gem install redis-3.0.0.gem</strong></p>
+<p><strong>第八步：使用ruby脚本搭建集群：</strong></p>
+<p>[root@Snailclimb redis-cluster]#./redis-trib.rb create –replicas 1 192.168.25.155:7001 192.168.25.155:7002 192.168.25.155:7003 192.168.25.155:7004 192.168.25.155:7005 192.168.25.155:7006</p>
+<p><strong>查看集群：</strong><br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d16e7a92a51a5?w=805&amp;h=149&amp;f=jpeg&amp;s=38010" alt="查看集群"></p>
+<p>注意：端口修改错误或者没有将cluster-enabled yes前的注释去掉都会导致集群搭建失败。总的来说，redis集群搭建还是很简单的。</p>
+<p><strong>这样一个完整的redis集群就已经搭建完毕了。。。</strong></p>
+<h2 id="三-redis单机版与集群版的测试使用"><a href="#三-redis单机版与集群版的测试使用" class="headerlink" title="三 redis单机版与集群版的测试使用"></a>三 redis单机版与集群版的测试使用</h2><p><strong>添加Maven依赖：</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- Redis客户端 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>redis.clients<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jedis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>2.7.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>4.12<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong>单机版redis测试：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testJedis</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	<span class="comment">// 创建一个连接Jedis对象，参数：host、port</span></span><br><span class="line">	Jedis jedis = <span class="keyword">new</span> Jedis(<span class="string">"192.168.25.155"</span>, <span class="number">6379</span>);</span><br><span class="line">	<span class="comment">// 直接使用jedis操作redis。所有jedis的命令都对应一个方法。</span></span><br><span class="line">	jedis.set(<span class="string">"bwcx9393"</span>, <span class="string">"欢迎关注Java面试通关手册"</span>);</span><br><span class="line">	String string = jedis.get(<span class="string">"bwcx9393"</span>);</span><br><span class="line">	System.out.println(string);<span class="comment">//输出内容：欢迎关注微信公众号：Java面试通关手册</span></span><br><span class="line">	<span class="comment">// 关闭连接</span></span><br><span class="line">	jedis.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>使用连接池测试单机版redis：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testJedisPool</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	<span class="comment">// 创建一个连接池对象，两个参数host、port</span></span><br><span class="line">	JedisPool jedisPool = <span class="keyword">new</span> JedisPool(<span class="string">"192.168.25.155"</span>, <span class="number">6379</span>);</span><br><span class="line">	<span class="comment">// 从连接池获得一个连接，就是一个jedis对象。</span></span><br><span class="line">	Jedis jedis = jedisPool.getResource();</span><br><span class="line">	<span class="comment">// 使用jedis操作redis</span></span><br><span class="line">	String string = jedis.get(<span class="string">"bwcx9393"</span>);</span><br><span class="line">	System.out.println(string);<span class="comment">//输出内容：欢迎关注微信公众号：Java面试通关手册</span></span><br><span class="line">	<span class="comment">// 关闭连接，每次使用完毕后关闭连接。连接池回收资源。</span></span><br><span class="line">	jedis.close();</span><br><span class="line">	<span class="comment">// 关闭连接池。</span></span><br><span class="line">	jedisPool.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>测试集群版redis：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testJedisCluster</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">	<span class="comment">// 创建一个JedisCluster对象。有一个参数nodes是一个set类型。set中包含若干个HostAndPort对象。</span></span><br><span class="line">	Set&lt;HostAndPort&gt; nodes = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7001</span>));</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7002</span>));</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7003</span>));</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7004</span>));</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7005</span>));</span><br><span class="line">	nodes.add(<span class="keyword">new</span> HostAndPort(<span class="string">"192.168.25.155"</span>, <span class="number">7006</span>));</span><br><span class="line">	JedisCluster jedisCluster = <span class="keyword">new</span> JedisCluster(nodes);</span><br><span class="line">	<span class="comment">// 直接使用JedisCluster对象操作redis。</span></span><br><span class="line">	jedisCluster.set(<span class="string">"test"</span>, <span class="string">"123"</span>);</span><br><span class="line">	String string = jedisCluster.get(<span class="string">"test"</span>);</span><br><span class="line">	System.out.println(string);</span><br><span class="line">	<span class="comment">// 关闭JedisCluster对象</span></span><br><span class="line">	jedisCluster.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="四-如何在JavaWeb项目中实现单机和集群无缝切换使用"><a href="#四-如何在JavaWeb项目中实现单机和集群无缝切换使用" class="headerlink" title="四 如何在JavaWeb项目中实现单机和集群无缝切换使用"></a>四 如何在JavaWeb项目中实现单机和集群无缝切换使用</h2><p>我们如何才能在项目中实现自己想用的单机redis就用单机redis想用redis集群就用redis集群而不要修改项目代码呢？？？</p>
+<p>创建相应类和接口<br><img src="https://user-gold-cdn.xitu.io/2018/4/17/162d17e6293f077f?w=321&amp;h=76&amp;f=jpeg&amp;s=5156" alt="创建相应类和接口"><br>接口：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">JedisClient</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function">String <span class="title">set</span><span class="params">(String key, String value)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">get</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">Boolean <span class="title">exists</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">expire</span><span class="params">(String key, <span class="keyword">int</span> seconds)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">ttl</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">incr</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">hset</span><span class="params">(String key, String field, String value)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">hget</span><span class="params">(String key, String field)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">hdel</span><span class="params">(String key, String... field)</span></span>;</span><br><span class="line">	<span class="function">Boolean <span class="title">hexists</span><span class="params">(String key, String field)</span></span>;</span><br><span class="line">	<span class="function">List&lt;String&gt; <span class="title">hvals</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">Long <span class="title">del</span><span class="params">(String key)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>集群版使用：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> redis.clients.jedis.JedisCluster;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JedisClientCluster</span> <span class="keyword">implements</span> <span class="title">JedisClient</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> JedisCluster jedisCluster;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> JedisCluster <span class="title">getJedisCluster</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setJedisCluster</span><span class="params">(JedisCluster jedisCluster)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.jedisCluster = jedisCluster;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">set</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.set(key, value);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.get(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Boolean <span class="title">exists</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.exists(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">expire</span><span class="params">(String key, <span class="keyword">int</span> seconds)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.expire(key, seconds);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">ttl</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.ttl(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">incr</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.incr(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">hset</span><span class="params">(String key, String field, String value)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.hset(key, field, value);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">hget</span><span class="params">(String key, String field)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.hget(key, field);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">hdel</span><span class="params">(String key, String... field)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.hdel(key, field);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Boolean <span class="title">hexists</span><span class="params">(String key, String field)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.hexists(key, field);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;String&gt; <span class="title">hvals</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.hvals(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">del</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisCluster.del(key);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>单机版使用：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> redis.clients.jedis.Jedis;</span><br><span class="line"><span class="keyword">import</span> redis.clients.jedis.JedisPool;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JedisClientPool</span> <span class="keyword">implements</span> <span class="title">JedisClient</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> JedisPool jedisPool;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> JedisPool <span class="title">getJedisPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> jedisPool;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setJedisPool</span><span class="params">(JedisPool jedisPool)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.jedisPool = jedisPool;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">set</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		String result = jedis.set(key, value);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		String result = jedis.get(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Boolean <span class="title">exists</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Boolean result = jedis.exists(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">expire</span><span class="params">(String key, <span class="keyword">int</span> seconds)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.expire(key, seconds);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">ttl</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.ttl(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">incr</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.incr(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">hset</span><span class="params">(String key, String field, String value)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.hset(key, field, value);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">hget</span><span class="params">(String key, String field)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		String result = jedis.hget(key, field);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">hdel</span><span class="params">(String key, String... field)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.hdel(key, field);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Boolean <span class="title">hexists</span><span class="params">(String key, String field)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Boolean result = jedis.hexists(key, field);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;String&gt; <span class="title">hvals</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		List&lt;String&gt; result = jedis.hvals(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Long <span class="title">del</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">		Jedis jedis = jedisPool.getResource();</span><br><span class="line">		Long result = jedis.del(key);</span><br><span class="line">		jedis.close();</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>applicationContext-redis.xml</strong><br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">	<span class="attr">xmlns:context</span>=<span class="string">"http://www.springframework.org/schema/context"</span> <span class="attr">xmlns:p</span>=<span class="string">"http://www.springframework.org/schema/p"</span></span></span><br><span class="line"><span class="tag">	<span class="attr">xmlns:aop</span>=<span class="string">"http://www.springframework.org/schema/aop"</span> <span class="attr">xmlns:tx</span>=<span class="string">"http://www.springframework.org/schema/tx"</span></span></span><br><span class="line"><span class="tag">	<span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">	<span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.2.xsd"</span>&gt;</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">&lt;!-- 连接redis单机版 --&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"jedisClientPool"</span> <span class="attr">class</span>=<span class="string">"xx.xx.xx.JedisClientPool"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"jedisPool"</span> <span class="attr">ref</span>=<span class="string">"jedisPool"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"jedisPool"</span> <span class="attr">class</span>=<span class="string">"redis.clients.jedis.JedisPool"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"host"</span> <span class="attr">value</span>=<span class="string">"192.168.25.155"</span>/&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"port"</span> <span class="attr">value</span>=<span class="string">"6379"</span>/&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">	<span class="comment">&lt;!-- 连接redis集群 --&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 	&lt;bean id="jedisClientCluster" class="xx.xx.xx.JedisClientCluster"&gt;</span></span><br><span class="line"><span class="comment">		&lt;property name="jedisCluster" ref="jedisCluster"/&gt;</span></span><br><span class="line"><span class="comment">	&lt;/bean&gt;</span></span><br><span class="line"><span class="comment">	&lt;bean id="jedisCluster" class="redis.clients.jedis.JedisCluster"&gt;</span></span><br><span class="line"><span class="comment">		&lt;constructor-arg name="nodes"&gt;</span></span><br><span class="line"><span class="comment">			&lt;set&gt;</span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7001"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7002"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7003"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7004"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7005"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">				&lt;bean class="redis.clients.jedis.HostAndPort"&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="host" value="192.168.25.155"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">					&lt;constructor-arg name="port" value="7006"&gt;&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">				&lt;/bean&gt; </span></span><br><span class="line"><span class="comment">			&lt;/set&gt;</span></span><br><span class="line"><span class="comment">		&lt;/constructor-arg&gt;</span></span><br><span class="line"><span class="comment">	&lt;/bean&gt; --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>测试代码：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JedisClientTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testJedisClient</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">//初始化spring容器</span></span><br><span class="line">		ApplicationContext applicationContext = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"classpath:spring/applicationContext-redis.xml"</span>);</span><br><span class="line">		<span class="comment">//从容器中获得JedisClient对象</span></span><br><span class="line">		JedisClient jedisClient = applicationContext.getBean(JedisClient.class);</span><br><span class="line">		jedisClient.set(<span class="string">"aaa"</span>, <span class="string">"111"</span>);</span><br><span class="line">		String string = jedisClient.get(<span class="string">"aaa"</span>);</span><br><span class="line">		System.out.println(string);</span><br><span class="line">		</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>这样在实际项目中我们无需修改代码就可以实现单机和集群版的相关切换。。</strong></p>
+<p>关于Redis的一些常见面试问题总结，我写了另外一篇文章：<strong>《面试中关于Redis的问题看这篇就够了》</strong>：<a href="https://juejin.im/post/5ad6e4066fb9a028d82c4b66" target="_blank" rel="noopener">https://juejin.im/post/5ad6e4066fb9a028d82c4b66</a></p>
+<p><strong>欢迎关注我的微信公众号:”Java面试通关手册”（坚持原创，分享美文，分享各种Java学习资源，面试题，以及企业级Java实战项目回复关键字免费领取）：</strong>。<br><img src="https://user-gold-cdn.xitu.io/2018/3/19/1623c870135a3609?w=215&amp;h=215&amp;f=jpeg&amp;s=29172" alt="微信公众号"></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-redis的安装"><span class="toc-text">一  redis的安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-redis集群的搭建"><span class="toc-text">二  redis集群的搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-redis集群-redis-cluster-原理"><span class="toc-text">2.1 redis集群(redis-cluster)原理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-0版本以后的redis集群架构图："><span class="toc-text">3.0版本以后的redis集群架构图：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#那么这是如何实现的呢？？？"><span class="toc-text">那么这是如何实现的呢？？？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#redis集群投票机制"><span class="toc-text">redis集群投票机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-redis集群-redis-cluster-的搭建"><span class="toc-text">2.2 redis集群(redis-cluster)的搭建</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-redis单机版与集群版的测试使用"><span class="toc-text">三 redis单机版与集群版的测试使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-如何在JavaWeb项目中实现单机和集群无缝切换使用"><span class="toc-text">四 如何在JavaWeb项目中实现单机和集群无缝切换使用</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2018/05/05/深入理解虚拟机之虚拟机类加载机制/" class="next">Next post 深入理解虚拟机之虚拟机类加载机制 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
