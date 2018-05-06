@@ -1,0 +1,425 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="先来了解一下这些年架构的变化，下面的故事是我编的。。。。
+“传统架构”：很多年前，刚学完JavaWeb开发的我凭借一人之力就开发了一个网站，网站 所有的功能和应用都集中在一起，方便了我的开发同时也节省了成本。但是后来我的网站访问流量突然加大，我通过不断增加服务器来提高并发量，但是我发现随着服务器的增加服务能力先增加后下降。不能通过硬件的方式解决问题的我，思考如何通过软件解决这个问题。
+“分布...">
+  
+  <title>高性能优秀的服务框架-dubbo介绍 [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+    <div class="item prev">
+      <a href="/2018/05/06/消息队列深入解析/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        消息队列深入解析
+      </div>
+    </div>
+  
+  
+    <div class="item next">
+      <a href="/2018/05/06/消息队列ActiveMQ的使用详解/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        消息队列ActiveMQ的使用详解
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>高性能优秀的服务框架-dubbo介绍</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2018-05-06</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-06</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/dubbo/">dubbo</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/dubbo/">dubbo</a>
+      
+      </span>
+      
+    </p>
+    
+    <p>先来了解一下这些年架构的变化，下面的故事是我编的。。。。</p>
+<p><strong>“传统架构”</strong>：很多年前，刚学完JavaWeb开发的我凭借一人之力就开发了一个网站，网站 所有的功能和应用都集中在一起，方便了我的开发同时也节省了成本。但是后来我的网站访问流量突然加大，我通过不断增加服务器来提高并发量，但是我发现随着服务器的增加服务能力先增加后下降。<br>不能通过硬件的方式解决问题的我，思考如何通过软件解决这个问题。</p>
+<p><strong>“分布式架构”</strong>：后来我按照功能点把系统拆分，拆分成独立的功能。单独为某一个节点添加服务器。通过系统之间配合完成整个业务逻辑。但是随着我的网站功能的日益完善，我发现各个模块有一些通用的业务逻辑无法共用，这样可不好，这时候我就在考虑为啥部直接来个面向服务呢？？？</p>
+<p><strong>“面向服务架构”</strong>：我把工程拆分成服务层、表现层两个工程。服务层中包含业务逻辑，只需要对外提供服务即可。表现层只需要处理和页面的交互，业务逻辑都是调用服务层的服务来实现。这样我的网站不光开发效率快，而且在扩展和升级相关服务的时候更加灵活。</p>
+<p>说了这么多“废话”,那么什么是dubbo?为什么要用dubbo呢？</p>
+<h3 id="什么是dubbo"><a href="#什么是dubbo" class="headerlink" title="什么是dubbo?"></a>什么是dubbo?</h3><blockquote>
+<p>Dubbo是  阿里巴巴公司开源的一个<strong>高性能优秀的服务框架</strong>，使得应用可通过高性能的 <strong>RPC</strong> 实现服务的输出和输入功能，可以和   Spring框架无缝集成。</p>
+</blockquote>
+<p>上面我们提到了RPC，现在我们来理解一下<strong>RPC的一些相关概念</strong>。之前学习过操作系统的同学在进程那一章也会接触到这个东西。</p>
+<blockquote>
+<p>RPC（Remote Procedure Call）—远程过程调用，它是一种通过网络从远程计算机程序上请求服务，而不需要了解底层网络技术的协议。RPC协议假定某些传输协议的存在，如TCP或UDP，为通信程序之间携带信息数据。在OSI网络通信模型中，RPC跨越了传输层和应用层。RPC使得开发包括网络分布式多程序在内的应用程序更加容易。<br>  RPC采用客户机/服务器模式。请求程序就是一个客户机，而服务提供程序就是一个服务器。首先，客户机调用进程发送一个有进程参数的调用信息到服务进程，然后等待应答信息。在服务器端，进程保持睡眠状态直到调用信息到达为止。当一个调用信息到达，服务器获得进程参数，计算结果，发送答复信息，然后等待下一个调用信息，最后，客户端调用进程接收答复信息，获得进程结果，然后调用执行继续进行。</p>
+</blockquote>
+<p><strong>既然有http请求为什么还要用rpc调用呢？？？</strong></p>
+<blockquote>
+<p>良好的rpc调用是面向服务的封装，针对服务的可用性和效率等都做了优化。单纯使用http调用则缺少了这些特性。</p>
+</blockquote>
+<h3 id="dubbo的一些相关资源"><a href="#dubbo的一些相关资源" class="headerlink" title="dubbo的一些相关资源"></a>dubbo的一些相关资源</h3><p>相信你看了dubbo的用户手册可能会明白dubbo被企业所喜爱的一部分原因，官方文档介绍的真的详细，很容易就可以学会如何简单的去使用dubbo到自己的项目中。</p>
+<p>dubbo官网：<a href="http://dubbo.incubator.apache.org/" target="_blank" rel="noopener">http://dubbo.incubator.apache.org/</a></p>
+<p>Dubbo Github地址：<a href="https://github.com/apache/incubator-dubbo" target="_blank" rel="noopener">https://github.com/apache/incubator-dubbo</a></p>
+<p><a href="https://github.com/apache/incubator-dubbo" target="_blank" rel="noopener">Dubbo用户手册(中文)</a> ：这篇文档详细讲解了dubbo的使用，基本涵盖dubbo的所有功能特性。如果你正依赖dubbo作为你业务工程的RPC通信框架，这里可以作为你的参考手册</p>
+<p><a href="http://dubbo.apache.org/books/dubbo-dev-book/" target="_blank" rel="noopener">Dubbo开发手册(中文)</a>：这篇文档的目标读者是对 dubbo 源码、设计有兴趣的，或者有意愿加入 dubbo 开发的人群。主要涵盖了 dubbo 的框架设计、扩展机制、编码规范、版本管理、构建等话题。</p>
+<h3 id="为什么要用dubbo呢？？？"><a href="#为什么要用dubbo呢？？？" class="headerlink" title="为什么要用dubbo呢？？？"></a>为什么要用dubbo呢？？？</h3><p>先来看一张普通电商的简易架构图<br><img src="https://user-gold-cdn.xitu.io/2018/4/9/162a875f8a6b5d01?w=824&amp;h=329&amp;f=jpeg&amp;s=22733" alt="普通电商的简易架构图"></p>
+<p>当服务越来越多后，服务之间的依赖关系越来越复杂，服务 URL 配置管理变得非常困难另外还需要统计服务的调用量来进行分析，这些需求都可以使用dubbo来满足。</p>
+<h4 id="dubbo架构"><a href="#dubbo架构" class="headerlink" title="dubbo架构"></a>dubbo架构</h4><p><img src="https://user-gold-cdn.xitu.io/2018/4/9/162a875f8a7c4bb1?w=450&amp;h=300&amp;f=jpeg&amp;s=18810" alt="dubbo架构"></p>
+<p><strong>上述节点简单说明：</strong></p>
+<ul>
+<li><strong>Provider</strong>     暴露服务的服务提供方</li>
+<li><strong>Consumer</strong>     调用远程服务的服务消费方</li>
+<li><strong>Registry</strong>     服务注册与发现的注册中心</li>
+<li><strong>Monitor</strong>     统计服务的调用次数和调用时间的监控中心</li>
+<li><strong>Container</strong>     服务运行容器</li>
+</ul>
+<p><strong>调用关系说明：</strong></p>
+<ol>
+<li>服务容器负责启动，加载，运行服务提供者。<ol start="2">
+<li>服务提供者在启动时，向注册中心注册自己提供的服务。</li>
+<li>服务消费者在启动时，向注册中心订阅自己所需的服务。</li>
+<li>注册中心返回服务提供者地址列表给消费者，如果有变更，注册中心将基于长连接推送变更数据给消费者。</li>
+<li>服务消费者，从提供者地址列表中，基于软负载均衡算法，选一台提供者进行调用，如果调用失败，再选另一台调用。</li>
+<li>服务消费者和提供者，在内存中累计调用次数和调用时间，定时每分钟发送一次统计数据到监控中心。</li>
+</ol>
+</li>
+</ol>
+<h3 id="注册中心"><a href="#注册中心" class="headerlink" title="注册中心"></a>注册中心</h3><p>一个完整的dubbo应该是包括注册中心的。<br><strong>注册中心</strong>用来注册服务和进行负载均衡，哪一个服务由哪一个机器来提供必需让调用者知道，简单来说就是IP地址和服务名称的对应关系。<br>dubbo官方提供了<strong>几种实现注册中心的方式</strong>：</p>
+<ol>
+<li>Multicast 注册中心<ol start="2">
+<li><strong>Zookeeper 注册中心</strong></li>
+<li>Redis 注册中心</li>
+</ol>
+</li>
+<li><p>Simple 注册中心</p>
+<p>另外官方明确推荐使用<strong>Zookeeper 注册中心</strong>的方式。<br><img src="https://user-gold-cdn.xitu.io/2018/4/9/162a875f8a48407a?w=832&amp;h=211&amp;f=jpeg&amp;s=12613" alt="Zookeeper 注册中心"><br>装zookeeper的话，建议装在Linux机器上，我这里就不做讲解了。想要了解的可以去官网看看文档，因为dubbo的官方文档很详细了，建议看官方文档，大多数博客文章还是照着文档写的。</p>
+</li>
+</ol>
+<h3 id="dubbo的使用"><a href="#dubbo的使用" class="headerlink" title="dubbo的使用"></a>dubbo的使用</h3><p><a href="https://github.com/apache/incubator-dubbo" target="_blank" rel="noopener">Dubbo用户手册(中文)</a> 已经介绍的很详细了，所以这里我就不去班门弄斧了，想要了解的可以去看一下。<br><img src="https://user-gold-cdn.xitu.io/2018/4/9/162a875f8a7cd50a?w=290&amp;h=595&amp;f=jpeg&amp;s=12371" alt="dubbo的使用"></p>
+<p><strong>欢迎关注我的微信公众号:”Java面试通关手册”（坚持原创，分享美文，分享各种Java学习资源，面试题，以及企业级Java实战项目回复关键字免费领取）：</strong>。<br><img src="https://user-gold-cdn.xitu.io/2018/3/19/1623c870135a3609?w=215&amp;h=215&amp;f=jpeg&amp;s=29172" alt="微信公众号"></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是dubbo"><span class="toc-text">什么是dubbo?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dubbo的一些相关资源"><span class="toc-text">dubbo的一些相关资源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么要用dubbo呢？？？"><span class="toc-text">为什么要用dubbo呢？？？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#dubbo架构"><span class="toc-text">dubbo架构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注册中心"><span class="toc-text">注册中心</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dubbo的使用"><span class="toc-text">dubbo的使用</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+    <a href="/2018/05/06/消息队列深入解析/" class="prev">&larr; Prev post 消息队列深入解析</a>
+  
+
+  
+
+  
+    <a href="/2018/05/06/消息队列ActiveMQ的使用详解/" class="next">Next post 消息队列ActiveMQ的使用详解 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
