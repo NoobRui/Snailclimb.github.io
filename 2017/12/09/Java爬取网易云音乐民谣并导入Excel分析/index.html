@@ -1,0 +1,394 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="前言考虑到这里有很多人没有接触过Java网络爬虫，所以我会从很基础的Jsoup分析HttpClient获取的网页讲起。了解这些东西可以直接看后面的“正式进入案例”，跳过前面这些基础。我导入的是“Excel转换工具XXL-EXCEL”这个开源项目然后在这个基础上写的这个Demo(下面会详细分析).看了这篇文章还有问题，记得给我留言我会尽力帮你解决。如果文章哪里有问题或者需要改进，也请留言告诉我...">
+  
+  <title>Java爬取网易云音乐民谣并导入Excel分析 [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+    <div class="item prev">
+      <a href="/2018/04/09/集合框架源码学习之ArrayList/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        集合框架源码学习之ArrayList
+      </div>
+    </div>
+  
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>Java爬取网易云音乐民谣并导入Excel分析</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2017-12-09</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-14</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/Java基础/">Java基础</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/Java基础/">Java基础</a>
+      
+        
+          /
+        
+        
+        <a href="/tags/Java爬虫/">Java爬虫</a>
+      
+      </span>
+      
+    </p>
+    
+    <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>考虑到这里有很多人没有接触过Java网络爬虫，所以我会从很基础的Jsoup分析HttpClient获取的网页讲起。了解这些东西可以直接看后面的“正式进入案例”，跳过前面这些基础。我导入的是“Excel转换工具XXL-EXCEL”这个开源项目然后在这个基础上写的这个Demo(下面会详细分析).看了这篇文章还有问题，记得给我留言我会尽力帮你解决。如果文章哪里有问题或者需要改进，也请留言告诉我，共同进步。</p>
+<h2 id="项目分析"><a href="#项目分析" class="headerlink" title="项目分析"></a>项目分析</h2><p>几天前用HttpClien+Jsoup把网易云音乐的民谣抓取下来，可惜显示效果是下面这样的：<br><img src="https://ws1.sinaimg.cn/large/006rNwoDgy1fmofhpy6omj30tm0cmwg8.jpg" alt="没有导入Excel之前"><br>想着如果能像前几天用开源的爬虫爬取知乎后然后导入Excel简单分析也好一点，如下图（下图只是简单的对导入进去的一个人的关注者做了一个排序）：<br><img src="https://ws1.sinaimg.cn/large/006rNwoDgy1fmofmxihjwj30v70k8787.jpg" alt="知乎爬虫Excel分析"><br>通过查阅文档知道Apache下有一个专门操作office各种文档的API：<a href="https://poi.apache.org/" target="_blank" rel="noopener">POI</a>，用这个API的话操作起来原理也很简单，但是很麻烦需要写很多代码，而且条理也不是很清楚。所以去Github上找了找有没有更方便的方法，Github有很多关于这方面的开源项目，经过各种尝试，最终选择了：<a href="http://www.xuxueli.com/xxl-excel/#/?id=%e3%80%8ajava%e5%af%b9%e8%b1%a1%e5%92%8cexcel%e8%bd%ac%e6%8d%a2%e5%b7%a5%e5%85%b7xxl-excel%e3%80%8b" target="_blank" rel="noopener">《Java对象和Excel转换工具XXL-EXCEL》</a>，通过这个框架可以灵活的进行Java对象和Excel文档相互转换。</p>
+<p>然后最终就是下面这个效果：<br><img src="https://ws1.sinaimg.cn/large/006rNwoDgy1fmog0gkysyj30ic0dc76n.jpg" alt="网易云Excel分析"></p>
+<h2 id="案例基础"><a href="#案例基础" class="headerlink" title="案例基础"></a>案例基础</h2><h3 id="①Jsoup解析网页分析"><a href="#①Jsoup解析网页分析" class="headerlink" title="①Jsoup解析网页分析"></a>①Jsoup解析网页分析</h3><p>Maven依赖：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- https://mvnrepository.com/artifact/org.jsoup/jsoup --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.jsoup<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jsoup<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>请求网页和解析网页，我们都以推酷网：<a href="https://www.tuicool.com/" target="_blank" rel="noopener">https://www.tuicool.com/</a>为例子。<br>先看一个<strong>实例</strong>(本实例获取的是推酷网首页的热门文章的信息)：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> news;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.jsoup.Jsoup;</span><br><span class="line"><span class="keyword">import</span> org.jsoup.nodes.Document;</span><br><span class="line"><span class="keyword">import</span> org.jsoup.nodes.Element;</span><br><span class="line"><span class="keyword">import</span> org.jsoup.select.Elements;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TuicoolHotArticles</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		String url = <span class="string">"https://www.tuicool.com/"</span>;</span><br><span class="line">		Document document = Jsoup.connect(url)</span><br><span class="line">				.userAgent(<span class="string">"Mozilla/5.0 (Windows NT 6.1; rv:30.0) Gecko/20100101 Firefox/30.0"</span>).get();</span><br><span class="line"></span><br><span class="line">		<span class="comment">// #id: 通过ID查找元素，比如：#logo</span></span><br><span class="line">		Elements items = document.select(<span class="string">".list_article_item "</span>);</span><br><span class="line">		System.out.println(items.size());</span><br><span class="line">		<span class="keyword">for</span> (Element item : items) &#123;</span><br><span class="line">			<span class="comment">// 标题。（类名title下的 a标签的title属性获取）</span></span><br><span class="line">			String title = item.select(<span class="string">".title a"</span>).attr(<span class="string">"title"</span>);</span><br><span class="line">			<span class="comment">// 标题图片地址（类名article_thumb_image下的 img标签的src属性获取）</span></span><br><span class="line">			String picture_href = item.select(<span class="string">".article_thumb_image img"</span>).attr(<span class="string">"src"</span>);</span><br><span class="line">			<span class="comment">// 时间 。(类名tip下的最后一个span标签的文字获取)</span></span><br><span class="line">			String date = item.select(<span class="string">".tip span"</span>).last().text();</span><br><span class="line">			<span class="comment">// 作者 。(类名tip下的第一个span标签的文字获取)</span></span><br><span class="line">			String author = item.select(<span class="string">".tip span"</span>).first().text();</span><br><span class="line"></span><br><span class="line">			System.out.println(<span class="string">"标题：               "</span> + title);</span><br><span class="line">			System.out.println(<span class="string">"标题图片地址："</span> + picture_href);</span><br><span class="line">			System.out.println(<span class="string">"发布日期           "</span> + date);</span><br><span class="line">			System.out.println(<span class="string">"作者                  "</span> + author);</span><br><span class="line">			System.out.println();</span><br><span class="line">			System.out.println();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>实例结果：</strong><br><img src="https://ws1.sinaimg.cn/large/006rNwoDgy1fmogy2er0qj30n90es3z2.jpg" alt="结果"><br>实例分析：</p>
+<ol>
+<li>网页元素分析</li>
+</ol>
+<p>元素位置-&gt;右键-&gt;查看元素(Inspent Element)<br><img src="https://ws1.sinaimg.cn/large/006rNwoDgy1fmoglrzlxkj30mv0iz0vb.jpg" alt="查看元素"></p>
+<ol start="2">
+<li>Jsoup解析<br>通过元素分析我们即可获取所在div类名以及元素的其他属性，通过这些属性我们即可获取该元素。上面代码我已经给你详细的注释，如果还有问题可以留言给我。</li>
+</ol>
+<p>如果想了解更详细的Jsoup操作请查看  <a href="http://www.open-open.com/jsoup/" target="_blank" rel="noopener">jsoup中文文档</a>。</p>
+<h3 id="②HttpClient请求网页分析"><a href="#②HttpClient请求网页分析" class="headerlink" title="②HttpClient请求网页分析"></a>②HttpClient请求网页分析</h3><p>Maven依赖：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- httpclient --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.httpcomponents<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>httpclient<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>4.5.4<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>下面是一个获取推酷首页源代码的例子：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> www.java1234.com.httpclientDemo2;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.http.HttpEntity;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.client.ClientProtocolException;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.client.methods.CloseableHttpResponse;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.client.methods.HttpGet;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.impl.client.CloseableHttpClient;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.impl.client.HttpClients;</span><br><span class="line"><span class="keyword">import</span> org.apache.http.util.EntityUtils;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * TODO 在www.java1234.com.httpclientDemo.HelloWorld2我们获取推酷网热门文章</span></span><br><span class="line"><span class="comment"> * 我们这里通过模拟浏览器的方法来重新获取</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2017年12月16日</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GetTuicoolHotArticles</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ClientProtocolException, IOException </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		CloseableHttpClient httpClient = HttpClients.createDefault(); <span class="comment">// 创建httpClient实例</span></span><br><span class="line">		HttpGet httpGet = <span class="keyword">new</span> HttpGet(<span class="string">"https://www.tuicool.com/"</span>); <span class="comment">// 创建httpget实例</span></span><br><span class="line">		<span class="comment">// 设置请求头信息Uer-Agent模拟浏览器</span></span><br><span class="line">		httpGet.setHeader(<span class="string">"User-Agent"</span>,</span><br><span class="line">				<span class="string">"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:58.0) Gecko/20100101 Firefox/58.0"</span>);</span><br><span class="line">		CloseableHttpResponse response = httpClient.execute(httpGet); <span class="comment">// 执行httpget请求</span></span><br><span class="line">		<span class="comment">// 获取响应状态</span></span><br><span class="line">		<span class="comment">//System.out.println("响应状态为：" + response.getStatusLine());</span></span><br><span class="line">		HttpEntity entity = response.getEntity(); <span class="comment">// 获取返回实体</span></span><br><span class="line">		 System.out.println(<span class="string">"网页内容："</span> + EntityUtils.toString(entity, <span class="string">"utf-8"</span>));</span><br><span class="line">		<span class="comment">// 获取响应内容类型Content-Type</span></span><br><span class="line">		<span class="comment">// System.out.println("content-type:" + entity.getContentType());</span></span><br><span class="line">		response.close(); <span class="comment">// response关闭</span></span><br><span class="line">		httpClient.close(); <span class="comment">// httpClient关闭</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个例子有一点需要说明的是因为推酷网设置了简单的反爬所以我们这里必须设置请求头信息Uer-Agent模拟浏览器访问，代码已经注释。</p>
+<p>如果想深入学习HttpClient，请查看<a href="http://hc.apache.org/httpcomponents-client-4.5.x/quickstart.html" target="_blank" rel="noopener">HttpClient官网</a>。</p>
+<h3 id="③Maven的简单使用"><a href="#③Maven的简单使用" class="headerlink" title="③Maven的简单使用"></a>③Maven的简单使用</h3><p>网上有很多这面的教程，而且Maven这个工具真的很实用，不会的可以在网上找一找教程。再不会留言找我，我教，</p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#项目分析"><span class="toc-text">项目分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#案例基础"><span class="toc-text">案例基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#①Jsoup解析网页分析"><span class="toc-text">①Jsoup解析网页分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#②HttpClient请求网页分析"><span class="toc-text">②HttpClient请求网页分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#③Maven的简单使用"><span class="toc-text">③Maven的简单使用</span></a></li></ol></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+    <a href="/2018/04/09/集合框架源码学习之ArrayList/" class="prev">&larr; Prev post 集合框架源码学习之ArrayList</a>
+  
+
+  
+
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
