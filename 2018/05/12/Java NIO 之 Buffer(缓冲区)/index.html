@@ -1,0 +1,547 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="一 Buffer(缓冲区)介绍Java NIO Buffers用于和NIO Channel交互。 我们从Channel中读取数据到buffers里，从Buffer把数据写入到Channels.
+Buffer本质上就是一块内存区，可以用来写入数据，并在稍后读取出来。这块内存被NIO Buffer包裹起来，对外提供一系列的读写方便开发的接口。
+在Java NIO中使用的核心缓冲区如下（覆盖了通过...">
+  
+  <title>Java NIO 之 Buffer(缓冲区) [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2018/05/11/Java NIO  概览/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        Java NIO  概览
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>Java NIO 之 Buffer(缓冲区)</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">撰写于 2018-05-12</span>
+      
+        <span id = "post-title-updated">修改于 2018-05-14</span>
+      
+      
+      <span id = "post-title-categories">分类
+      
+      
+        
+        
+        <a href="/categories/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      标签
+      
+      
+        
+        
+        <a href="/tags/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+    </p>
+    
+    <h2 id="一-Buffer-缓冲区-介绍"><a href="#一-Buffer-缓冲区-介绍" class="headerlink" title="一 Buffer(缓冲区)介绍"></a>一 Buffer(缓冲区)介绍</h2><p><strong>Java NIO Buffers用于和NIO Channel交互。 我们从Channel中读取数据到buffers里，从Buffer把数据写入到Channels.</strong></p>
+<p><strong>Buffer本质上就是一块内存区</strong>，可以用来写入数据，并在稍后读取出来。这块内存被NIO Buffer包裹起来，对外提供一系列的读写方便开发的接口。</p>
+<p>在Java NIO中使用的核心缓冲区如下（覆盖了通过I/O发送的基本数据类型：byte,  char、short, int, long, float, double ，long）：</p>
+<ul>
+<li><strong>ByteBuffer</strong></li>
+<li><strong>CharBuffer</strong></li>
+<li><strong>ShortBuffer</strong></li>
+<li><strong>IntBuffer</strong></li>
+<li><strong>FloatBuffer</strong></li>
+<li><strong>DoubleBuffer</strong></li>
+<li><strong>LongBuffer</strong></li>
+</ul>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/13/16358d5c1e1bb88c?w=952&amp;h=242&amp;f=png&amp;s=9559" alt="Java NIO中使用的核心缓冲区"></p>
+<h4 id="利用Buffer读写数据，通常遵循四个步骤："><a href="#利用Buffer读写数据，通常遵循四个步骤：" class="headerlink" title="利用Buffer读写数据，通常遵循四个步骤："></a>利用Buffer读写数据，通常遵循四个步骤：</h4><ol>
+<li><strong>把数据写入buffer；</strong></li>
+<li><strong>调用flip；</strong></li>
+<li><strong>从Buffer中读取数据；</strong></li>
+<li><strong>调用buffer.clear()或者buffer.compact()。</strong></li>
+</ol>
+<p>当写入数据到buffer中时，buffer会记录已经写入的数据大小。当需要读数据时，通过 <strong>flip()</strong> 方法把buffer从写模式调整为读模式；在读模式下，可以读取所有已经写入的数据。</p>
+<p>当读取完数据后，需要清空buffer，以满足后续写入操作。清空buffer有两种方式：调用 <strong>clear()</strong> 或 <strong>compact()</strong> 方法。<strong>clear会清空整个buffer，compact则只清空已读取的数据</strong>，未被读取的数据会被移动到buffer的开始位置，写入位置则近跟着未读数据之后。</p>
+<h3 id="Buffer的容量，位置，上限（Buffer-Capacity-Position-and-Limit）"><a href="#Buffer的容量，位置，上限（Buffer-Capacity-Position-and-Limit）" class="headerlink" title="Buffer的容量，位置，上限（Buffer Capacity, Position and Limit）"></a>Buffer的容量，位置，上限（Buffer Capacity, Position and Limit）</h3><p><strong>Buffer缓冲区实质上就是一块内存</strong>，用于写入数据，也供后续再次读取数据。这块内存被NIO Buffer管理，并提供一系列的方法用于更简单的操作这块内存。</p>
+<p>一个Buffer有三个属性是必须掌握的，分别是：</p>
+<ul>
+<li><strong>capacity容量</strong></li>
+<li><strong>position位置</strong></li>
+<li><strong>limit限制</strong></li>
+</ul>
+<p>position和limit的具体含义取决于当前buffer的模式。capacity在两种模式下都表示容量。</p>
+<p>下面有张示例图，描诉了读写模式下position和limit的含义：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/13/16358e573449c84d?w=506&amp;h=342&amp;f=png&amp;s=16208" alt="不同模式下position和limit的含义"></p>
+<blockquote>
+<h3 id="容量（Capacity）"><a href="#容量（Capacity）" class="headerlink" title="容量（Capacity）"></a>容量（Capacity）</h3></blockquote>
+<p>作为一块内存，buffer有一个固定的大小，叫做capacit（容量）。也就是最多只能写入容量值得字节，整形等数据。一旦buffer写满了就需要清空已读数据以便下次继续写入新的数据。</p>
+<blockquote>
+<h3 id="位置（Position）"><a href="#位置（Position）" class="headerlink" title="位置（Position）"></a>位置（Position）</h3></blockquote>
+<p><strong>当写入数据到Buffer的时候需要从一个确定的位置开始</strong>，默认初始化时这个位置position为0，一旦写入了数据比如一个字节，整形数据，那么position的值就会指向数据之后的一个单元，position最大可以到capacity-1.</p>
+<p><strong>当从Buffer读取数据时，也需要从一个确定的位置开始。buffer从写入模式变为读取模式时，position会归零，每次读取后，position向后移动。</strong></p>
+<blockquote>
+<h3 id="上限（Limit）"><a href="#上限（Limit）" class="headerlink" title="上限（Limit）"></a>上限（Limit）</h3></blockquote>
+<p>在写模式，limit的含义是我们所能写入的最大数据量，它等同于buffer的容量。</p>
+<p>一旦切换到读模式，limit则代表我们所能读取的最大数据量，他的值等同于写模式下position的位置。换句话说，您可以读取与写入数量相同的字节数（限制设置为写入的字节数，由位置标记）。</p>
+<h2 id="二-Buffer的常见方法"><a href="#二-Buffer的常见方法" class="headerlink" title="二 Buffer的常见方法"></a>二 Buffer的常见方法</h2><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>介绍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>abstract Object array()</td>
+<td>返回支持此缓冲区的数组 （可选操作）  </td>
+</tr>
+<tr>
+<td>abstract int arrayOffset()</td>
+<td>返回该缓冲区的缓冲区的第一个元素的背衬数组中的偏移量 （可选操作） </td>
+</tr>
+<tr>
+<td>int capacity()</td>
+<td>返回此缓冲区的容量</td>
+</tr>
+<tr>
+<td>Buffer clear()</td>
+<td>清除此缓存区。将position = 0;limit = capacity;mark = -1; </td>
+</tr>
+<tr>
+<td>Buffer flip()</td>
+<td>flip()方法可以吧Buffer从写模式切换到读模式。调用flip方法会把position归零，并设置limit为之前的position的值。 也就是说，现在position代表的是读取位置，limit标示的是已写入的数据位置。</td>
+</tr>
+<tr>
+<td>abstract boolean hasArray()</td>
+<td>告诉这个缓冲区是否由可访问的数组支持</td>
+</tr>
+<tr>
+<td>boolean hasRemaining()</td>
+<td>return position &lt; limit，返回是否还有未读内容</td>
+</tr>
+<tr>
+<td>abstract boolean isDirect()</td>
+<td>判断个缓冲区是否为 direct  </td>
+</tr>
+<tr>
+<td>abstract boolean isReadOnly()</td>
+<td>判断告知这个缓冲区是否是只读的 </td>
+</tr>
+<tr>
+<td>int limit()</td>
+<td>返回此缓冲区的限制 </td>
+</tr>
+<tr>
+<td>Buffer position(int newPosition)</td>
+<td>设置这个缓冲区的位置 </td>
+</tr>
+<tr>
+<td>int remaining()</td>
+<td>return limit - position; 返回limit和position之间相对位置差 </td>
+</tr>
+<tr>
+<td>Buffer rewind()</td>
+<td>把position设为0，mark设为-1，不改变limit的值 </td>
+</tr>
+<tr>
+<td>Buffer mark()</td>
+<td>将此缓冲区的标记设置在其位置 </td>
+</tr>
+</tbody>
+</table>
+<h2 id="三-Buffer的使用方式-方法介绍"><a href="#三-Buffer的使用方式-方法介绍" class="headerlink" title="三 Buffer的使用方式/方法介绍"></a>三 Buffer的使用方式/方法介绍</h2><blockquote>
+<h3 id="分配缓冲区（Allocating-a-Buffer）"><a href="#分配缓冲区（Allocating-a-Buffer）" class="headerlink" title="分配缓冲区（Allocating a Buffer）"></a>分配缓冲区（Allocating a Buffer）</h3></blockquote>
+<p>为了获得缓冲区对象，我们必须首先分配一个缓冲区。在每个Buffer类中，allocate()方法用于分配缓冲区。</p>
+<p>下面来看看ByteBuffer分配容量为28字节的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer buf = ByteBuffer.allocate(<span class="number">28</span>);</span><br></pre></td></tr></table></figure>
+<p>下面来看看另一个示例：CharBuffer分配空间大小为2048个字符。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CharBuffer buf = CharBuffer.allocate(<span class="number">2048</span>);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<h3 id="写入数据到缓冲区（Writing-Data-to-a-Buffer）"><a href="#写入数据到缓冲区（Writing-Data-to-a-Buffer）" class="headerlink" title="写入数据到缓冲区（Writing Data to a Buffer）"></a>写入数据到缓冲区（Writing Data to a Buffer）</h3></blockquote>
+<p><strong>写数据到Buffer有两种方法：</strong></p>
+<ul>
+<li>从Channel中写数据到Buffer</li>
+<li>手动写数据到Buffer，调用put方法</li>
+</ul>
+<p>下面是一个实例，演示从Channel写数据到Buffer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> bytesRead = inChannel.read(buf); <span class="comment">//read into buffer.</span></span><br></pre></td></tr></table></figure>
+<p>通过put写数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">buf.put(<span class="number">127</span>);</span><br></pre></td></tr></table></figure>
+<p>put方法有很多不同版本，对应不同的写数据方法。例如把数据写到特定的位置，或者把一个字节数据写入buffer。看考JavaDoc文档可以查阅的更多数据。</p>
+<blockquote>
+<h3 id="翻转（flip-）"><a href="#翻转（flip-）" class="headerlink" title="翻转（flip()）"></a>翻转（flip()）</h3></blockquote>
+<p>flip()方法可以吧Buffer从写模式切换到读模式。调用flip方法会把position归零，并设置limit为之前的position的值。 也就是说，现在position代表的是读取位置，limit标示的是已写入的数据位置。</p>
+<blockquote>
+<h3 id="从Buffer读取数据（Reading-Data-from-a-Buffer）"><a href="#从Buffer读取数据（Reading-Data-from-a-Buffer）" class="headerlink" title="从Buffer读取数据（Reading Data from a Buffer）"></a>从Buffer读取数据（Reading Data from a Buffer）</h3></blockquote>
+<p>从Buffer读数据也有两种方式。</p>
+<ul>
+<li>从buffer读数据到channel</li>
+<li>从buffer直接读取数据，调用get方法</li>
+</ul>
+<p>读取数据到channel的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> bytesWritten = inChannel.write(buf);</span><br></pre></td></tr></table></figure>
+<p>调用get读取数据的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">byte</span> aByte = buf.get();</span><br></pre></td></tr></table></figure>
+<p>get也有诸多版本，对应了不同的读取方式。</p>
+<blockquote>
+<h3 id="rewind"><a href="#rewind" class="headerlink" title="rewind()"></a>rewind()</h3></blockquote>
+<p>Buffer.rewind()方法将position置为0，这样我们可以重复读取buffer中的数据。limit保持不变。</p>
+<blockquote>
+<h3 id="clear-and-compact"><a href="#clear-and-compact" class="headerlink" title="clear() and compact()"></a>clear() and compact()</h3></blockquote>
+<p>一旦我们从buffer中读取完数据，需要复用buffer为下次写数据做准备。只需要调用clear（）或compact（）方法。</p>
+<p>如果调用的是clear()方法，position将被设回0，limit被设置成 capacity的值。换句话说，Buffer 被清空了。Buffer中的数据并未清除，只是这些标记告诉我们可以从哪里开始往Buffer里写数据。</p>
+<p>如果Buffer还有一些数据没有读取完，调用clear就会导致这部分数据被“遗忘”，因为我们没有标记这部分数据未读。</p>
+<p>针对这种情况，如果需要保留未读数据，那么可以使用compact。 因此 <strong>compact()</strong> 和 <strong>clear()</strong> 的区别就在于: <strong>对未读数据的处理，是保留这部分数据还是一起清空</strong> 。</p>
+<blockquote>
+<h3 id="mark-与reset-方法"><a href="#mark-与reset-方法" class="headerlink" title="mark()与reset()方法"></a>mark()与reset()方法</h3></blockquote>
+<p>通过调用Buffer.mark()方法，可以标记Buffer中的一个特定position。之后可以通过调用Buffer.reset()方法恢复到这个position。例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">buffer.mark();</span><br><span class="line"><span class="comment">//call buffer.get() a couple of times, e.g. during parsing.</span></span><br><span class="line">buffer.reset();  <span class="comment">//set position back to mark.</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<h3 id="equals-and-compareTo"><a href="#equals-and-compareTo" class="headerlink" title="equals() and compareTo()"></a>equals() and compareTo()</h3></blockquote>
+<p>可以用eqauls和compareTo比较两个buffer</p>
+<p><strong>equals():</strong></p>
+<p>判断两个buffer相对，需满足：</p>
+<ul>
+<li>类型相同</li>
+<li>buffer中剩余字节数相同</li>
+<li>所有剩余字节相等</li>
+</ul>
+<p>从上面的三个条件可以看出，equals只比较buffer中的部分内容，并不会去比较每一个元素。</p>
+<p><strong>compareTo():</strong></p>
+<p>compareTo也是比较buffer中的剩余元素，只不过这个方法适用于比较排序的：</p>
+<h2 id="四-Buffer常用方法测试"><a href="#四-Buffer常用方法测试" class="headerlink" title="四 Buffer常用方法测试"></a>四 Buffer常用方法测试</h2><p>这里以ByteBuffer为例子说明抽象类Buffer的实现类的一些常见方法的使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> channel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.nio.ByteBuffer;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ByteBufferMethods</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        <span class="comment">//分配缓冲区（Allocating a Buffer）</span></span><br><span class="line">        ByteBuffer buffer = ByteBuffer.allocate(<span class="number">33</span>);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"-------------Test reset-------------"</span>);</span><br><span class="line">        <span class="comment">//clear()方法，position将被设回0，limit被设置成 capacity的值</span></span><br><span class="line">        buffer.clear();</span><br><span class="line">       <span class="comment">// 设置这个缓冲区的位置</span></span><br><span class="line">        buffer.position(<span class="number">5</span>);</span><br><span class="line">        <span class="comment">//将此缓冲区的标记设置在其位置。没有buffer.mark();这句话会报错</span></span><br><span class="line">        buffer.mark();</span><br><span class="line">        buffer.position(<span class="number">10</span>);</span><br><span class="line">        System.out.println(<span class="string">"before reset:      "</span> + buffer);</span><br><span class="line">        <span class="comment">//将此缓冲区的位置重置为先前标记的位置。（buffer.position(5)）</span></span><br><span class="line">        buffer.reset();</span><br><span class="line">        System.out.println(<span class="string">"after reset:       "</span> + buffer);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"-------------Test rewind-------------"</span>);</span><br><span class="line">        buffer.clear();</span><br><span class="line">        buffer.position(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">//返回此缓冲区的限制。</span></span><br><span class="line">        buffer.limit(<span class="number">15</span>);</span><br><span class="line">        System.out.println(<span class="string">"before rewind:       "</span> + buffer);</span><br><span class="line">        <span class="comment">//把position设为0，mark设为-1，不改变limit的值</span></span><br><span class="line">        buffer.rewind();</span><br><span class="line">        System.out.println(<span class="string">"before rewind:       "</span> + buffer);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"-------------Test compact-------------"</span>);</span><br><span class="line">        buffer.clear();</span><br><span class="line">        buffer.put(<span class="string">"abcd"</span>.getBytes());</span><br><span class="line">        System.out.println(<span class="string">"before compact:       "</span> + buffer);</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(buffer.array()));</span><br><span class="line">        <span class="comment">//limit = position;position = 0;mark = -1; 翻转，也就是让flip之后的position到limit这块区域变成之前的0到position这块，</span></span><br><span class="line">        <span class="comment">//翻转就是将一个处于存数据状态的缓冲区变为一个处于准备取数据的状态</span></span><br><span class="line">        buffer.flip();</span><br><span class="line">        System.out.println(<span class="string">"after flip:       "</span> + buffer);</span><br><span class="line">        <span class="comment">//get()方法：相对读，从position位置读取一个byte，并将position+1，为下次读写作准备</span></span><br><span class="line">        System.out.println((<span class="keyword">char</span>) buffer.get());</span><br><span class="line">        System.out.println((<span class="keyword">char</span>) buffer.get());</span><br><span class="line">        System.out.println((<span class="keyword">char</span>) buffer.get());</span><br><span class="line">        System.out.println(<span class="string">"after three gets:       "</span> + buffer);</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + <span class="keyword">new</span> String(buffer.array()));</span><br><span class="line">        <span class="comment">//把从position到limit中的内容移到0到limit-position的区域内，position和limit的取值也分别变成limit-position、capacity。</span></span><br><span class="line">        <span class="comment">// 如果先将positon设置到limit，再compact，那么相当于clear()</span></span><br><span class="line">        buffer.compact();</span><br><span class="line">        System.out.println(<span class="string">"after compact:       "</span> + buffer);</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + <span class="keyword">new</span> String(buffer.array()));</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"-------------Test get-------------"</span>);</span><br><span class="line">        buffer = ByteBuffer.allocate(<span class="number">32</span>);</span><br><span class="line">        buffer.put((<span class="keyword">byte</span>) <span class="string">'a'</span>).put((<span class="keyword">byte</span>) <span class="string">'b'</span>).put((<span class="keyword">byte</span>) <span class="string">'c'</span>).put((<span class="keyword">byte</span>) <span class="string">'d'</span>)</span><br><span class="line">                .put((<span class="keyword">byte</span>) <span class="string">'e'</span>).put((<span class="keyword">byte</span>) <span class="string">'f'</span>);</span><br><span class="line">        System.out.println(<span class="string">"before flip():       "</span> + buffer);</span><br><span class="line">        <span class="comment">// 转换为读取模式</span></span><br><span class="line">        buffer.flip();</span><br><span class="line">        System.out.println(<span class="string">"before get():       "</span> + buffer);</span><br><span class="line">        System.out.println((<span class="keyword">char</span>) buffer.get());</span><br><span class="line">        System.out.println(<span class="string">"after get():       "</span> + buffer);</span><br><span class="line">        <span class="comment">// get(index)不影响position的值</span></span><br><span class="line">        System.out.println((<span class="keyword">char</span>) buffer.get(<span class="number">2</span>));</span><br><span class="line">        System.out.println(<span class="string">"after get(index):       "</span> + buffer);</span><br><span class="line">        <span class="keyword">byte</span>[] dst = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span>];</span><br><span class="line">        buffer.get(dst, <span class="number">0</span>, <span class="number">2</span>);</span><br><span class="line">        System.out.println(<span class="string">"after get(dst, 0, 2):       "</span> + buffer);</span><br><span class="line">        System.out.println(<span class="string">"\t dst:"</span> + <span class="keyword">new</span> String(dst));</span><br><span class="line">        System.out.println(<span class="string">"buffer now is:       "</span> + buffer);</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + <span class="keyword">new</span> String(buffer.array()));</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"-------------Test put-------------"</span>);</span><br><span class="line">        ByteBuffer bb = ByteBuffer.allocate(<span class="number">32</span>);</span><br><span class="line">        System.out.println(<span class="string">"before put(byte):       "</span> + bb);</span><br><span class="line">        System.out.println(<span class="string">"after put(byte):       "</span> + bb.put((<span class="keyword">byte</span>) <span class="string">'z'</span>));</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + bb.put(<span class="number">2</span>, (<span class="keyword">byte</span>) <span class="string">'c'</span>));</span><br><span class="line">        <span class="comment">// put(2,(byte) 'c')不改变position的位置</span></span><br><span class="line">        System.out.println(<span class="string">"after put(2,(byte) 'c'):       "</span> + bb);</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + <span class="keyword">new</span> String(bb.array()));</span><br><span class="line">        <span class="comment">// 这里的buffer是 abcdef[pos=3 lim=6 cap=32]</span></span><br><span class="line">        bb.put(buffer);</span><br><span class="line">        System.out.println(<span class="string">"after put(buffer):       "</span> + bb);</span><br><span class="line">        System.out.println(<span class="string">"\t"</span> + <span class="keyword">new</span> String(bb.array()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a href="https://docs.oracle.com/javase/8/docs/api/" target="_blank" rel="noopener">官方JDK相关文档</a></p>
+<p><a href="http://tutorials.jenkov.com/java-nio/channels.html" target="_blank" rel="noopener">谷歌搜索排名第一的Java NIO教程</a></p>
+<p><a href="https://book.douban.com/subject/24841235/" target="_blank" rel="noopener">《Java程序员修炼之道》</a></p>
+<p><a href="https://blog.csdn.net/u012345283/article/details/38357851" target="_blank" rel="noopener">ByteBuffer常用方法详解</a></p>
+<p><a href="https://www.yiibai.com/java_nio/java-nio-buffers.html" target="_blank" rel="noopener">Java NIO 易百教程</a></p>
+<p><strong>欢迎关注我的微信公众号:”Java面试通关手册”（一个有温度的微信公众号，期待与你共同进步~~~坚持原创，分享美文，分享各种Java学习资源）：</strong><br><img src="https://user-gold-cdn.xitu.io/2018/5/13/163587eed3857758?w=300&amp;h=390&amp;f=png&amp;s=13332" alt=""></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">隐藏目录</button>
+  <div class="random-toc">
+    <h2>目录</h2>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Buffer-缓冲区-介绍"><span class="toc-text">一 Buffer(缓冲区)介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#利用Buffer读写数据，通常遵循四个步骤："><span class="toc-text">利用Buffer读写数据，通常遵循四个步骤：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Buffer的容量，位置，上限（Buffer-Capacity-Position-and-Limit）"><span class="toc-text">Buffer的容量，位置，上限（Buffer Capacity, Position and Limit）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#容量（Capacity）"><span class="toc-text">容量（Capacity）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#位置（Position）"><span class="toc-text">位置（Position）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#上限（Limit）"><span class="toc-text">上限（Limit）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Buffer的常见方法"><span class="toc-text">二 Buffer的常见方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-Buffer的使用方式-方法介绍"><span class="toc-text">三 Buffer的使用方式/方法介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#分配缓冲区（Allocating-a-Buffer）"><span class="toc-text">分配缓冲区（Allocating a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#写入数据到缓冲区（Writing-Data-to-a-Buffer）"><span class="toc-text">写入数据到缓冲区（Writing Data to a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#翻转（flip-）"><span class="toc-text">翻转（flip()）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从Buffer读取数据（Reading-Data-from-a-Buffer）"><span class="toc-text">从Buffer读取数据（Reading Data from a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rewind"><span class="toc-text">rewind()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clear-and-compact"><span class="toc-text">clear() and compact()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mark-与reset-方法"><span class="toc-text">mark()与reset()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#equals-and-compareTo"><span class="toc-text">equals() and compareTo()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-Buffer常用方法测试"><span class="toc-text">四 Buffer常用方法测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考："><span class="toc-text">参考：</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2018/05/11/Java NIO  概览/" class="next">下一篇 Java NIO  概览 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
