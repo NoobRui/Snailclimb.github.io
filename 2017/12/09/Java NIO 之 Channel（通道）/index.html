@@ -1,0 +1,492 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="一 Channel（通道）介绍通常来说NIO中的所有IO都是从 Channel（通道） 开始的。
+
+从通道进行数据读取 ：创建一个缓冲区，然后请求通道读取数据。
+
+从通道进行数据写入 ：创建一个缓冲区，填充数据，并要求通道写入数据。
+
+
+数据读取和写入操作图示：
+
+Java NIO Channel通道和流非常相似，主要有以下几点区别：
+通道可以读也可以写，流一般来说是单向的（只能读或者写，所...">
+  
+  <title>Java NIO 之 Channel（通道） [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+    <div class="item prev">
+      <a href="/2018/04/09/集合框架源码学习之ArrayList/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        集合框架源码学习之ArrayList
+      </div>
+    </div>
+  
+  
+    <div class="item next">
+      <a href="/2017/12/09/Java爬取网易云音乐民谣并导入Excel分析/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        Java爬取网易云音乐民谣并导入Excel分析
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>Java NIO 之 Channel（通道）</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2017-12-09</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-15</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+    </p>
+    
+    <h2 id="一-Channel（通道）介绍"><a href="#一-Channel（通道）介绍" class="headerlink" title="一 Channel（通道）介绍"></a>一 Channel（通道）介绍</h2><p><strong>通常来说NIO中的所有IO都是从 Channel（通道） 开始的。</strong></p>
+<ul>
+<li><p><strong>从通道进行数据读取</strong> ：创建一个缓冲区，然后请求通道读取数据。</p>
+</li>
+<li><p><strong>从通道进行数据写入</strong> ：创建一个缓冲区，填充数据，并要求通道写入数据。</p>
+</li>
+</ul>
+<p><strong>数据读取和写入操作图示：</strong></p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/13/1635844948c99fc9?w=338&amp;h=231&amp;f=png&amp;s=9174" alt="数据读取和写入操作图示"></p>
+<h3 id="Java-NIO-Channel通道和流非常相似，主要有以下几点区别："><a href="#Java-NIO-Channel通道和流非常相似，主要有以下几点区别：" class="headerlink" title="Java NIO Channel通道和流非常相似，主要有以下几点区别："></a>Java NIO Channel通道和流非常相似，主要有以下几点区别：</h3><ul>
+<li>通道可以读也可以写，流一般来说是单向的（只能读或者写，所以之前我们用流进行IO操作的时候需要分别创建一个输入流和一个输出流）。</li>
+<li>通道可以异步读写。</li>
+<li>通道总是基于缓冲区Buffer来读写。</li>
+</ul>
+<h3 id="Java-NIO中最重要的几个Channel的实现："><a href="#Java-NIO中最重要的几个Channel的实现：" class="headerlink" title="Java NIO中最重要的几个Channel的实现："></a>Java NIO中最重要的几个Channel的实现：</h3><ul>
+<li><strong>FileChannel：</strong> 用于文件的数据读写 </li>
+<li><strong>DatagramChannel：</strong> 用于UDP的数据读写</li>
+<li><strong>SocketChannel：</strong> 用于TCP的数据读写，一般是客户端实现</li>
+<li><strong>ServerSocketChannel:</strong> 允许我们监听TCP链接请求，每个请求会创建会一个SocketChannel，一般是服务器实现</li>
+</ul>
+<h3 id="类层次结构："><a href="#类层次结构：" class="headerlink" title="类层次结构："></a>类层次结构：</h3><p>下面的UML图使用Idea生成的。<br><img src="https://user-gold-cdn.xitu.io/2018/5/13/16358b30103186fd?w=1295&amp;h=637&amp;f=png&amp;s=36685" alt="java.nio.channels类的层次结构"></p>
+<h2 id="二-FileChannel的使用"><a href="#二-FileChannel的使用" class="headerlink" title="二 FileChannel的使用"></a>二 FileChannel的使用</h2><p><strong>使用FileChannel读取数据到Buffer（缓冲区）以及利用Buffer（缓冲区）写入数据到FileChannel：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> filechannel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.RandomAccessFile;</span><br><span class="line"><span class="keyword">import</span> java.nio.ByteBuffer;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.FileChannel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FileChannelTxt</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="comment">//1.创建一个RandomAccessFile（随机访问文件）对象，</span></span><br><span class="line">        RandomAccessFile raf=<span class="keyword">new</span> RandomAccessFile(<span class="string">"D:\\niodata.txt"</span>, <span class="string">"rw"</span>);</span><br><span class="line">        <span class="comment">//通过RandomAccessFile对象的getChannel()方法。FileChannel是抽象类。</span></span><br><span class="line">        FileChannel inChannel=raf.getChannel();</span><br><span class="line">        <span class="comment">//2.创建一个读数据缓冲区对象</span></span><br><span class="line">        ByteBuffer buf=ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line">        <span class="comment">//3.从通道中读取数据</span></span><br><span class="line">        <span class="keyword">int</span> bytesRead = inChannel.read(buf);</span><br><span class="line">        <span class="comment">//创建一个写数据缓冲区对象</span></span><br><span class="line">        ByteBuffer buf2=ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line">        <span class="comment">//写入数据</span></span><br><span class="line">        buf2.put(<span class="string">"filechannel test"</span>.getBytes());</span><br><span class="line">        buf2.flip();</span><br><span class="line">        inChannel.write(buf);</span><br><span class="line">        <span class="keyword">while</span> (bytesRead != -<span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">            System.out.println(<span class="string">"Read "</span> + bytesRead);</span><br><span class="line">            <span class="comment">//Buffer有两种模式，写模式和读模式。在写模式下调用flip()之后，Buffer从写模式变成读模式。</span></span><br><span class="line">            buf.flip();</span><br><span class="line">           <span class="comment">//如果还有未读内容</span></span><br><span class="line">            <span class="keyword">while</span> (buf.hasRemaining()) &#123;</span><br><span class="line">                System.out.print((<span class="keyword">char</span>) buf.get());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//清空缓存区</span></span><br><span class="line">            buf.clear();</span><br><span class="line">            bytesRead = inChannel.read(buf);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//关闭RandomAccessFile（随机访问文件）对象</span></span><br><span class="line">        raf.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>运行效果：</strong><br><img src="https://user-gold-cdn.xitu.io/2018/5/14/1635de2443befb4e?w=1366&amp;h=736&amp;f=png&amp;s=185474" alt="运行效果"></p>
+<h3 id="通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则："><a href="#通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则：" class="headerlink" title="通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则："></a>通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则：</h3><blockquote>
+<h4 id="1-开启FileChannel"><a href="#1-开启FileChannel" class="headerlink" title="1. 开启FileChannel"></a>1. 开启FileChannel</h4><p><strong>使用之前，FileChannel必须被打开</strong> ，但是你无法直接打开FileChannel（FileChannel是抽象类）。需要通过 <strong>InputStream</strong> ， <strong>OutputStream</strong> 或 <strong>RandomAccessFile</strong> 获取FileChannel。</p>
+</blockquote>
+<p>我们上面的例子是通过RandomAccessFile打开FileChannel的：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1.创建一个RandomAccessFile（随机访问文件）对象，</span></span><br><span class="line">RandomAccessFile raf=<span class="keyword">new</span> RandomAccessFile(<span class="string">"D:\\niodata.txt"</span>, <span class="string">"rw"</span>);</span><br><span class="line"><span class="comment">//通过RandomAccessFile对象的getChannel()方法。FileChannel是抽象类。</span></span><br><span class="line">FileChannel inChannel=raf.getChannel();</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<h4 id="2-从FileChannel读取数据-写入数据"><a href="#2-从FileChannel读取数据-写入数据" class="headerlink" title="2. 从FileChannel读取数据/写入数据"></a>2. 从FileChannel读取数据/写入数据</h4><p>从FileChannel中读取数据/写入数据之前首先要创建一个Buffer（缓冲区）对象，Buffer（缓冲区）对象的使用我们在上一篇文章中已经详细说明了，如果不了解的话可以看我的上一篇关于Buffer的文章。</p>
+</blockquote>
+<p><strong>使用FileChannel的read()方法读取数据：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//2.创建一个读数据缓冲区对象</span></span><br><span class="line">ByteBuffer buf=ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line"><span class="comment">//3.从通道中读取数据</span></span><br><span class="line"><span class="keyword">int</span> bytesRead = inChannel.read(buf);</span><br></pre></td></tr></table></figure></p>
+<p><strong>使用FileChannel的write()方法写入数据：</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建一个写数据缓冲区对象</span></span><br><span class="line">ByteBuffer buf2=ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line"><span class="comment">//写入数据</span></span><br><span class="line">buf2.put(<span class="string">"filechannel test"</span>.getBytes());</span><br><span class="line">buf2.flip();</span><br><span class="line">inChannel.write(buf);</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<h4 id="3-关闭FileChannel"><a href="#3-关闭FileChannel" class="headerlink" title="3. 关闭FileChannel"></a>3. 关闭FileChannel</h4></blockquote>
+<p>完成使用后，FileChannel您必须关闭它。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">channel.close（）;</span><br></pre></td></tr></table></figure>
+<h2 id="三-SocketChannel和ServerSocketChannel的使用"><a href="#三-SocketChannel和ServerSocketChannel的使用" class="headerlink" title="三 SocketChannel和ServerSocketChannel的使用"></a>三 SocketChannel和ServerSocketChannel的使用</h2><p><strong>利用SocketChannel和ServerSocketChannel实现客户端与服务器端简单通信：</strong></p>
+<p><strong>SocketChannel</strong> 用于创建基于tcp协议的客户端对象，因为SocketChannel中不存在accept()方法，所以，它不能成为一个服务端程序。通过 <strong>connect()方法</strong> ，SocketChannel对象可以连接到其他tcp服务器程序。</p>
+<p>客户端:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">package socketchannel;</span><br><span class="line"></span><br><span class="line">import java.io.IOException;</span><br><span class="line">import java.net.InetSocketAddress;</span><br><span class="line">import java.nio.ByteBuffer;</span><br><span class="line">import java.nio.channels.SocketChannel;</span><br><span class="line"></span><br><span class="line">public class WebClient &#123;</span><br><span class="line">    public static void main(String[] args) throws IOException &#123;</span><br><span class="line">        //1.通过SocketChannel的open()方法创建一个SocketChannel对象</span><br><span class="line">        SocketChannel socketChannel = SocketChannel.open();</span><br><span class="line">        //2.连接到远程服务器（连接此通道的socket）</span><br><span class="line">        socketChannel.connect(new InetSocketAddress(&quot;127.0.0.1&quot;, 3333));</span><br><span class="line">        // 3.创建写数据缓存区对象</span><br><span class="line">        ByteBuffer writeBuffer = ByteBuffer.allocate(128);</span><br><span class="line">        writeBuffer.put(&quot;hello WebServer this is from WebClient&quot;.getBytes());</span><br><span class="line">        writeBuffer.flip();</span><br><span class="line">        socketChannel.write(writeBuffer);</span><br><span class="line">        //创建读数据缓存区对象</span><br><span class="line">        ByteBuffer readBuffer = ByteBuffer.allocate(128);</span><br><span class="line">        socketChannel.read(readBuffer);</span><br><span class="line">        //String 字符串常量，不可变；StringBuffer 字符串变量（线程安全），可变；StringBuilder 字符串变量（非线程安全），可变</span><br><span class="line">        StringBuilder stringBuffer=new StringBuilder();</span><br><span class="line">        //4.将Buffer从写模式变为可读模式</span><br><span class="line">        readBuffer.flip();</span><br><span class="line">        while (readBuffer.hasRemaining()) &#123;</span><br><span class="line">            stringBuffer.append((char) readBuffer.get());</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(&quot;从服务端接收到的数据：&quot;+stringBuffer);</span><br><span class="line"></span><br><span class="line">        socketChannel.close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>ServerSocketChannel</strong> 允许我们监听TCP链接请求，通过ServerSocketChannelImpl的 <strong>accept()方法</strong> 可以创建一个SocketChannel对象用户从客户端读/写数据。</p>
+<p>服务端：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> socketchannel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.net.InetSocketAddress;</span><br><span class="line"><span class="keyword">import</span> java.nio.ByteBuffer;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.ServerSocketChannel;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.SocketChannel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebServer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//1.通过ServerSocketChannel 的open()方法创建一个ServerSocketChannel对象，open方法的作用：打开套接字通道</span></span><br><span class="line">            ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">            <span class="comment">//2.通过ServerSocketChannel绑定ip地址和port(端口号)</span></span><br><span class="line">            ssc.socket().bind(<span class="keyword">new</span> InetSocketAddress(<span class="string">"127.0.0.1"</span>, <span class="number">3333</span>));</span><br><span class="line">            <span class="comment">//通过ServerSocketChannelImpl的accept()方法创建一个SocketChannel对象用户从客户端读/写数据</span></span><br><span class="line">            SocketChannel socketChannel = ssc.accept();</span><br><span class="line">            <span class="comment">//3.创建写数据的缓存区对象</span></span><br><span class="line">            ByteBuffer writeBuffer = ByteBuffer.allocate(<span class="number">128</span>);</span><br><span class="line">            writeBuffer.put(<span class="string">"hello WebClient this is from WebServer"</span>.getBytes());</span><br><span class="line">            writeBuffer.flip();</span><br><span class="line">            socketChannel.write(writeBuffer);</span><br><span class="line">            <span class="comment">//创建读数据的缓存区对象</span></span><br><span class="line">            ByteBuffer readBuffer = ByteBuffer.allocate(<span class="number">128</span>);</span><br><span class="line">            <span class="comment">//读取缓存区数据</span></span><br><span class="line">            socketChannel.read(readBuffer);</span><br><span class="line">            StringBuilder stringBuffer=<span class="keyword">new</span> StringBuilder();</span><br><span class="line">            <span class="comment">//4.将Buffer从写模式变为可读模式</span></span><br><span class="line">            readBuffer.flip();</span><br><span class="line">            <span class="keyword">while</span> (readBuffer.hasRemaining()) &#123;</span><br><span class="line">                stringBuffer.append((<span class="keyword">char</span>) readBuffer.get());</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="string">"从客户端接收到的数据："</span>+stringBuffer);</span><br><span class="line">            socketChannel.close();</span><br><span class="line">            ssc.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>运行效果：</strong></p>
+<p>客户端：<br><img src="https://user-gold-cdn.xitu.io/2018/5/15/1636215fd3add2e6?w=677&amp;h=150&amp;f=png&amp;s=12162" alt="客户端"></p>
+<p>服务端：<br><img src="https://user-gold-cdn.xitu.io/2018/5/15/16362165912aaed6?w=826&amp;h=184&amp;f=png&amp;s=15380" alt="服务端  "></p>
+<h3 id="通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则："><a href="#通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则：" class="headerlink" title="通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则："></a>通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则：</h3><p><strong>考虑到篇幅问题，下面只给出大致步骤，不贴代码，可以结合上述实例理解。</strong></p>
+<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><blockquote>
+<h4 id="1-通过SocketChannel连接到远程服务器"><a href="#1-通过SocketChannel连接到远程服务器" class="headerlink" title="1.通过SocketChannel连接到远程服务器"></a>1.通过SocketChannel连接到远程服务器</h4></blockquote>
+<blockquote>
+<h4 id="2-创建读数据-写数据缓冲区对象来读取服务端数据或向服务端发送数据"><a href="#2-创建读数据-写数据缓冲区对象来读取服务端数据或向服务端发送数据" class="headerlink" title="2.创建读数据/写数据缓冲区对象来读取服务端数据或向服务端发送数据"></a>2.创建读数据/写数据缓冲区对象来读取服务端数据或向服务端发送数据</h4></blockquote>
+<blockquote>
+<h4 id="3-关闭SocketChannel"><a href="#3-关闭SocketChannel" class="headerlink" title="3.关闭SocketChannel"></a>3.关闭SocketChannel</h4></blockquote>
+<h3 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h3><blockquote>
+<h4 id="1-通过ServerSocketChannel-绑定ip地址和端口号"><a href="#1-通过ServerSocketChannel-绑定ip地址和端口号" class="headerlink" title="1.通过ServerSocketChannel 绑定ip地址和端口号"></a>1.通过ServerSocketChannel 绑定ip地址和端口号</h4></blockquote>
+<blockquote>
+<h4 id="2-通过ServerSocketChannelImpl的accept-方法创建一个SocketChannel对象用户从客户端读-写数据"><a href="#2-通过ServerSocketChannelImpl的accept-方法创建一个SocketChannel对象用户从客户端读-写数据" class="headerlink" title="2.通过ServerSocketChannelImpl的accept()方法创建一个SocketChannel对象用户从客户端读/写数据"></a>2.通过ServerSocketChannelImpl的accept()方法创建一个SocketChannel对象用户从客户端读/写数据</h4></blockquote>
+<blockquote>
+<h4 id="3-创建读数据-写数据缓冲区对象来读取客户端数据或向客户端发送数据"><a href="#3-创建读数据-写数据缓冲区对象来读取客户端数据或向客户端发送数据" class="headerlink" title="3.创建读数据/写数据缓冲区对象来读取客户端数据或向客户端发送数据"></a>3.创建读数据/写数据缓冲区对象来读取客户端数据或向客户端发送数据</h4></blockquote>
+<blockquote>
+<h4 id="4-关闭SocketChannel和ServerSocketChannel"><a href="#4-关闭SocketChannel和ServerSocketChannel" class="headerlink" title="4. 关闭SocketChannel和ServerSocketChannel"></a>4. 关闭SocketChannel和ServerSocketChannel</h4></blockquote>
+<h2 id="四-️DatagramChannel的使用"><a href="#四-️DatagramChannel的使用" class="headerlink" title="四 ️DatagramChannel的使用"></a>四 ️DatagramChannel的使用</h2><p>DataGramChannel，类似于java 网络编程的DatagramSocket类；使用UDP进行网络传输， <strong>UDP是无连接，面向数据报文段的协议，对传输的数据不保证安全与完整</strong> ；和上面介绍的SocketChannel和ServerSocketChannel的使用方法类似，所以这里就简单介绍一下如何使用。</p>
+<blockquote>
+<h4 id="1-获取DataGramChannel"><a href="#1-获取DataGramChannel" class="headerlink" title="1.获取DataGramChannel"></a>1.获取DataGramChannel</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1.通过DatagramChannel的open()方法创建一个DatagramChannel对象</span></span><br><span class="line">DatagramChannel datagramChannel = DatagramChannel.open();</span><br><span class="line"><span class="comment">//绑定一个port（端口）</span></span><br><span class="line">datagramChannel.bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">1234</span>));</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>上面代码表示程序可以在1234端口接收数据报。</p>
+<blockquote>
+<h4 id="2-接收-发送消息"><a href="#2-接收-发送消息" class="headerlink" title="2.接收/发送消息"></a>2.接收/发送消息</h4></blockquote>
+<p><strong>接收消息：</strong></p>
+<p>先创建一个缓存区对象，然后通过receive方法接收消息，这个方法返回一个SocketAddress对象，表示发送消息方的地址：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer buf = ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line">buf.clear();</span><br><span class="line">channel.receive(buf);</span><br></pre></td></tr></table></figure>
+<p><strong>发送消息：</strong></p>
+<p>由于UDP下，服务端和客户端通信并不需要建立连接，只需要知道对方地址即可发出消息，但是是否发送成功或者成功被接收到是没有保证的;发送消息通过send方法发出，改方法返回一个int值，表示成功发送的字节数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer buf = ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line">buf.clear();</span><br><span class="line">buf.put(<span class="string">"datagramchannel"</span>.getBytes());</span><br><span class="line">buf.flip();</span><br><span class="line"><span class="keyword">int</span> send = channel.send(buffer, <span class="keyword">new</span> InetSocketAddress(<span class="string">"localhost"</span>,<span class="number">1234</span>));</span><br></pre></td></tr></table></figure>
+<p>这个例子发送一串字符：“datagramchannel”到主机名为”localhost”服务器的端口1234上。 </p>
+<h2 id="五-Scatter-Gather"><a href="#五-Scatter-Gather" class="headerlink" title="五  Scatter / Gather"></a>五  Scatter / Gather</h2><p>Channel 提供了一种被称为 Scatter/Gather 的新功能，也称为本地矢量 I/O。Scatter/Gather 是指在多个缓冲区上实现一个简单的 I/O 操作。正确使用 Scatter / Gather可以明显提高性能。</p>
+<p>大多数现代操作系统都支持本地矢量I/O（native vectored I/O）操作。当您在一个通道上请求一个Scatter/Gather操作时，该请求会被翻译为适当的本地调用来直接填充或抽取缓冲区，减少或避免了缓冲区拷贝和系统调用；</p>
+<p>Scatter/Gather应该使用直接的ByteBuffers以从本地I/O获取最大性能优势。</p>
+<p><strong>Scatter/Gather功能是通道(Channel)提供的  并不是Buffer。</strong></p>
+<ul>
+<li><p><strong>Scatter:</strong>  从一个Channel读取的信息分散到N个缓冲区中(Buufer).</p>
+</li>
+<li><p><strong>Gather:</strong>  将N个Buffer里面内容按照顺序发送到一个Channel.  </p>
+</li>
+</ul>
+<h3 id="Scattering-Reads"><a href="#Scattering-Reads" class="headerlink" title="Scattering Reads"></a>Scattering Reads</h3><p>“scattering read”是把数据从单个Channel写入到多个buffer,如下图所示：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/15/163629ab5d0adc01?w=357&amp;h=311&amp;f=png&amp;s=7602" alt="scattering read"><br>示例代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer header = ByteBuffer.allocate(<span class="number">128</span>);</span><br><span class="line">ByteBuffer body   = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line"></span><br><span class="line">ByteBuffer[] bufferArray = &#123; header, body &#125;;</span><br><span class="line"></span><br><span class="line">channel.read(bufferArray);</span><br></pre></td></tr></table></figure>
+<p>read()方法内部会负责把数据按顺序写进传入的buffer数组内。一个buffer写满后，接着写到下一个buffer中。</p>
+<p>举个例子，假如通道中有200个字节数据，那么header会被写入128个字节数据，body会被写入72个字节数据；</p>
+<p><strong>注意：</strong></p>
+<p>无论是scatter还是gather操作，都是按照buffer在数组中的顺序来依次读取或写入的；</p>
+<h3 id="Gathering-Writes"><a href="#Gathering-Writes" class="headerlink" title="Gathering Writes"></a>Gathering Writes</h3><p>“gathering write”把多个buffer的数据写入到同一个channel中，下面是示意图：<br><img src="https://user-gold-cdn.xitu.io/2018/5/15/16362ada115fa31c?w=351&amp;h=301&amp;f=png&amp;s=7106" alt="Gathering Writes"></p>
+<p>示例代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ByteBuffer header = ByteBuffer.allocate(<span class="number">128</span>);</span><br><span class="line">ByteBuffer body   = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//write data into buffers</span></span><br><span class="line"></span><br><span class="line">ByteBuffer[] bufferArray = &#123; header, body &#125;;</span><br><span class="line"></span><br><span class="line">channel.write(bufferArray);</span><br></pre></td></tr></table></figure>
+<p>write()方法内部会负责把数据按顺序写入到channel中。</p>
+<p><strong>注意：</strong> </p>
+<p>并不是所有数据都写入到通道，写入的数据要根据position和limit的值来判断，只有position和limit之间的数据才会被写入；</p>
+<p>举个例子，假如以上header缓冲区中有128个字节数据，但此时position=0，limit=58；那么只有下标索引为0-57的数据才会被写入到通道中。</p>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a href="https://docs.oracle.com/javase/8/docs/api/" target="_blank" rel="noopener">官方JDK相关文档</a></p>
+<p><a href="http://tutorials.jenkov.com/java-nio/channels.html" target="_blank" rel="noopener">谷歌搜索排名第一的Java NIO教程</a></p>
+<p><a href="https://book.douban.com/subject/1433583/" target="_blank" rel="noopener">《Java NIO》</a></p>
+<p><a href="https://book.douban.com/subject/26320992/" target="_blank" rel="noopener">《Java 8编程官方参考教程（第9版）》</a></p>
+<p><strong>欢迎关注我的微信公众号:”Java面试通关手册”（一个有温度的微信公众号，期待与你共同进步~~~坚持原创，分享美文，分享各种Java学习资源）：</strong><br><img src="https://user-gold-cdn.xitu.io/2018/5/13/163587eed3857758?w=300&amp;h=390&amp;f=png&amp;s=13332" alt=""></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Channel（通道）介绍"><span class="toc-text">一 Channel（通道）介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-NIO-Channel通道和流非常相似，主要有以下几点区别："><span class="toc-text">Java NIO Channel通道和流非常相似，主要有以下几点区别：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-NIO中最重要的几个Channel的实现："><span class="toc-text">Java NIO中最重要的几个Channel的实现：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类层次结构："><span class="toc-text">类层次结构：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-FileChannel的使用"><span class="toc-text">二 FileChannel的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则："><span class="toc-text">通过上述实例代码，我们可以大概总结出FileChannel的一般使用规则：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-开启FileChannel"><span class="toc-text">1. 开启FileChannel</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-从FileChannel读取数据-写入数据"><span class="toc-text">2. 从FileChannel读取数据/写入数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-关闭FileChannel"><span class="toc-text">3. 关闭FileChannel</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-SocketChannel和ServerSocketChannel的使用"><span class="toc-text">三 SocketChannel和ServerSocketChannel的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则："><span class="toc-text">通过上述实例代码，我们可以大概总结出SocketChannel和ServerSocketChannel的使用的一般使用规则：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#客户端"><span class="toc-text">客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-通过SocketChannel连接到远程服务器"><span class="toc-text">1.通过SocketChannel连接到远程服务器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-创建读数据-写数据缓冲区对象来读取服务端数据或向服务端发送数据"><span class="toc-text">2.创建读数据/写数据缓冲区对象来读取服务端数据或向服务端发送数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-关闭SocketChannel"><span class="toc-text">3.关闭SocketChannel</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务端"><span class="toc-text">服务端</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-通过ServerSocketChannel-绑定ip地址和端口号"><span class="toc-text">1.通过ServerSocketChannel 绑定ip地址和端口号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-通过ServerSocketChannelImpl的accept-方法创建一个SocketChannel对象用户从客户端读-写数据"><span class="toc-text">2.通过ServerSocketChannelImpl的accept()方法创建一个SocketChannel对象用户从客户端读/写数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-创建读数据-写数据缓冲区对象来读取客户端数据或向客户端发送数据"><span class="toc-text">3.创建读数据/写数据缓冲区对象来读取客户端数据或向客户端发送数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-关闭SocketChannel和ServerSocketChannel"><span class="toc-text">4. 关闭SocketChannel和ServerSocketChannel</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-️DatagramChannel的使用"><span class="toc-text">四 ️DatagramChannel的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-获取DataGramChannel"><span class="toc-text">1.获取DataGramChannel</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-接收-发送消息"><span class="toc-text">2.接收/发送消息</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五-Scatter-Gather"><span class="toc-text">五  Scatter / Gather</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Scattering-Reads"><span class="toc-text">Scattering Reads</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gathering-Writes"><span class="toc-text">Gathering Writes</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考："><span class="toc-text">参考：</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+    <a href="/2018/04/09/集合框架源码学习之ArrayList/" class="prev">&larr; Prev post 集合框架源码学习之ArrayList</a>
+  
+
+  
+
+  
+    <a href="/2017/12/09/Java爬取网易云音乐民谣并导入Excel分析/" class="next">Next post Java爬取网易云音乐民谣并导入Excel分析 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
