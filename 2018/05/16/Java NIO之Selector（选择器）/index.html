@@ -1,0 +1,471 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="历史回顾:
+Java NIO 概览
+Java NIO 之 Buffer(缓冲区)
+Java NIO 之 Channel（通道）
+其他高赞文章：
+面试中关于Redis的问题看这篇就够了
+一文轻松搞懂redis集群原理及搭建与使用
+超详细的Java面试题总结（三）之Java集合篇常见问题
+一 Selector（选择器）介绍Selector 一般称 为选择器 ，当然你也可以翻译为 多路复用器 。它...">
+  
+  <title>Java NIO 之 Channel（通道） [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2018/05/13/Java NIO 之 Channel（通道）/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        Java NIO 之 Channel（通道）
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>Java NIO 之 Channel（通道）</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2018-05-16</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-16</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/JavaNIO/">JavaNIO</a>
+      
+      </span>
+      
+    </p>
+    
+    <p><strong>历史回顾:</strong></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483956&amp;idx=1&amp;sn=57692bc5b7c2c6dfb812489baadc29c9&amp;chksm=fd985455caefdd4331d828d8e89b22f19b304aa87d6da73c5d8c66fcef16e4c0b448b1a6f791#rd" target="_blank" rel="noopener">Java NIO 概览</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483961&amp;idx=1&amp;sn=f67bef4c279e78043ff649b6b03fdcbc&amp;chksm=fd985458caefdd4e3317ccbdb2d0a5a70a5024d3255eebf38183919ed9c25ade536017c0a6ba#rd" target="_blank" rel="noopener">Java NIO 之 Buffer(缓冲区)</a></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483966&amp;idx=1&amp;sn=d5cf18c69f5f9ec2aff149270422731f&amp;chksm=fd98545fcaefdd49296e2c78000ce5da277435b90ba3c03b92b7cf54c6ccc71d61d13efbce63#rd" target="_blank" rel="noopener">Java NIO 之 Channel（通道）</a></p>
+<p><strong>其他高赞文章：</strong></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483867&amp;idx=1&amp;sn=39a06fa3d6d8f09eefaaf3d2b15b40e4&amp;chksm=fd9857bacaefdeaccd7cacf9dba5b702bf6f639377ded5a29fc1e56ae4f1d0a121ad0829c9dc#rd" target="_blank" rel="noopener">面试中关于Redis的问题看这篇就够了</a></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483863&amp;idx=1&amp;sn=8a7d08783f45d3af7947b8a2e7cc981e&amp;chksm=fd9857b6caefdea072a7cec992fa1d32316ffdca8eea24e7f5a7871ce189bdd4e5b144619ae8#rd" target="_blank" rel="noopener">一文轻松搞懂redis集群原理及搭建与使用</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzU4NDQ4MzU5OA==&amp;mid=2247483661&amp;idx=1&amp;sn=4836dfcf4c2a952ec9287bd9bfc380bd&amp;chksm=fd98576ccaefde7ad1f2feb10e652e896d24884a4a1fb804490bd192ff099c039dbf85eb8dbc#rd" target="_blank" rel="noopener">超详细的Java面试题总结（三）之Java集合篇常见问题</a></p>
+<h2 id="一-Selector（选择器）介绍"><a href="#一-Selector（选择器）介绍" class="headerlink" title="一 Selector（选择器）介绍"></a>一 Selector（选择器）介绍</h2><p><strong>Selector</strong> 一般称 为<strong>选择器</strong> ，当然你也可以翻译为 <strong>多路复用器</strong> 。它是Java NIO核心组件中的一个，用于检查一个或多个NIO Channel（通道）的状态是否处于可读、可写。如此可以实现单线程管理多个channels,也就是可以管理多个网络链接。</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/15/16363f5338f36c54?w=636&amp;h=260&amp;f=png&amp;s=23373" alt="Selector（选择器）"></p>
+<p><strong>使用Selector的好处在于：</strong> 使用更少的线程来就可以来处理通道了， 相比使用多个线程，避免了线程上下文切换带来的开销。</p>
+<h2 id="二-Selector（选择器）的使用方法介绍"><a href="#二-Selector（选择器）的使用方法介绍" class="headerlink" title="二 Selector（选择器）的使用方法介绍"></a>二 Selector（选择器）的使用方法介绍</h2><h3 id="1-Selector的创建"><a href="#1-Selector的创建" class="headerlink" title="1. Selector的创建"></a>1. Selector的创建</h3><p>通过调用Selector.open()方法创建一个Selector对象，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Selector selector = Selector.open();</span><br></pre></td></tr></table></figure>
+<p>这里需要说明一下</p>
+<h3 id="2-注册Channel到Selector"><a href="#2-注册Channel到Selector" class="headerlink" title="2. 注册Channel到Selector"></a>2. 注册Channel到Selector</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">channel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">SelectionKey key = channel.register(selector, Selectionkey.OP_READ);</span><br></pre></td></tr></table></figure>
+<p><strong>Channel必须是非阻塞的</strong>。<br>所以FileChannel不适用Selector，因为FileChannel不能切换为非阻塞模式，更准确的来说是因为FileChannel没有继承SelectableChannel。Socket channel可以正常使用。</p>
+<p><strong>SelectableChannel抽象类</strong> 有一个 <strong>configureBlocking（）</strong> 方法用于使通道处于阻塞模式或非阻塞模式。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">abstract</span> SelectableChannel <span class="title">configureBlocking</span><span class="params">(<span class="keyword">boolean</span> block)</span></span></span><br></pre></td></tr></table></figure></p>
+<h3 id="注意："><a href="#注意：" class="headerlink" title="注意："></a><strong>注意：</strong></h3><p><strong>SelectableChannel抽象类</strong>的<strong>configureBlocking（）</strong> 方法是由 <strong>AbstractSelectableChannel抽象类</strong>实现的，<strong>SocketChannel、ServerSocketChannel、DatagramChannel</strong>都是直接继承了 <strong>AbstractSelectableChannel抽象类</strong> 。<br>大家有兴趣可以看看NIO的源码，各种抽象类和抽象类上层的抽象类。我本人暂时不准备研究NIO源码，因为还有很多事情要做，需要研究的同学可以自行看看。</p>
+<p><strong>register()</strong> 方法的第二个参数。这是一个“ <strong>interest集合</strong> ”，意思是在<strong>通过Selector监听Channel时对什么事件感兴趣</strong>。可以监听四种不同类型的事件：</p>
+<ul>
+<li><strong>Connect</strong></li>
+<li><strong>Accept</strong></li>
+<li><strong>Read</strong></li>
+<li><strong>Write</strong></li>
+</ul>
+<p>通道触发了一个事件意思是该事件已经就绪。比如某个Channel成功连接到另一个服务器称为“ <strong>连接就绪</strong> ”。一个Server Socket Channel准备好接收新进入的连接称为“ <strong>接收就绪</strong> ”。一个有数据可读的通道可以说是“ <strong>读就绪</strong> ”。等待写数据的通道可以说是“ <strong>写就绪</strong> ”。</p>
+<p>这四种事件用SelectionKey的四个常量来表示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SelectionKey.OP_CONNECT</span><br><span class="line">SelectionKey.OP_ACCEPT</span><br><span class="line">SelectionKey.OP_READ</span><br><span class="line">SelectionKey.OP_WRITE</span><br></pre></td></tr></table></figure></p>
+<p>如果你对不止一种事件感兴趣，使用或运算符即可，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> interestSet = SelectionKey.OP_READ | SelectionKey.OP_WRITE;</span><br></pre></td></tr></table></figure>
+<h3 id="3-SelectionKey介绍"><a href="#3-SelectionKey介绍" class="headerlink" title="3. SelectionKey介绍"></a>3. SelectionKey介绍</h3><p>一个SelectionKey键表示了一个特定的通道对象和一个特定的选择器对象之间的注册关系。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">key.attachment(); <span class="comment">//返回SelectionKey的attachment，attachment可以在注册channel的时候指定。</span></span><br><span class="line">key.channel(); <span class="comment">// 返回该SelectionKey对应的channel。</span></span><br><span class="line">key.selector(); <span class="comment">// 返回该SelectionKey对应的Selector。</span></span><br><span class="line">key.interestOps(); <span class="comment">//返回代表需要Selector监控的IO操作的bit mask</span></span><br><span class="line">key.readyOps(); <span class="comment">// 返回一个bit mask，代表在相应channel上可以进行的IO操作。</span></span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p> <strong>key.interestOps():</strong></p>
+</blockquote>
+<p>我们可以通过以下方法来判断Selector是否对Channel的某种事件感兴趣<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> interestSet = selectionKey.interestOps(); </span><br><span class="line"><span class="keyword">boolean</span> isInterestedInAccept = (interestSet &amp; SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT；</span><br><span class="line"><span class="keyword">boolean</span> isInterestedInConnect = interestSet &amp; SelectionKey.OP_CONNECT;</span><br><span class="line"><span class="keyword">boolean</span> isInterestedInRead = interestSet &amp; SelectionKey.OP_READ;</span><br><span class="line"><span class="keyword">boolean</span> isInterestedInWrite = interestSet &amp; SelectionKey.OP_WRITE;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>key.readyOps()</strong></p>
+</blockquote>
+<p>ready 集合是通道已经准备就绪的操作的集合。JAVA中定义以下几个方法用来检查这些操作是否就绪.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建ready集合的方法</span></span><br><span class="line"><span class="keyword">int</span> readySet = selectionKey.readyOps();</span><br><span class="line"><span class="comment">//检查这些操作是否就绪的方法</span></span><br><span class="line">key.isAcceptable();<span class="comment">//是否可读，是返回 true</span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isWritable</span><span class="params">()</span>：<span class="comment">//是否可写，是返回 true</span></span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isConnectable</span><span class="params">()</span>：<span class="comment">//是否可连接，是返回 true</span></span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">isAcceptable</span><span class="params">()</span>：<span class="comment">//是否可接收，是返回 true</span></span></span><br></pre></td></tr></table></figure>
+<p> <strong>从SelectionKey访问Channel和Selector很简单。如下：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = key.channel();</span><br><span class="line">Selector selector = key.selector();</span><br><span class="line">key.attachment();</span><br></pre></td></tr></table></figure>
+<p>可以将一个对象或者更多信息附着到SelectionKey上，这样就能方便的识别某个给定的通道。例如，可以附加 与通道一起使用的Buffer，或是包含聚集数据的某个对象。使用方法如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">key.attach(theObject);</span><br><span class="line">Object attachedObj = key.attachment();</span><br></pre></td></tr></table></figure></p>
+<p>还可以在用register()方法向Selector注册Channel的时候附加对象。如：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SelectionKey key = channel.register(selector, SelectionKey.OP_READ, theObject);</span><br></pre></td></tr></table></figure></p>
+<h3 id="4-从Selector中选择channel-Selecting-Channels-via-a-Selector"><a href="#4-从Selector中选择channel-Selecting-Channels-via-a-Selector" class="headerlink" title="4. 从Selector中选择channel(Selecting Channels via a Selector)"></a>4. 从Selector中选择channel(Selecting Channels via a Selector)</h3><p>选择器维护注册过的通道的集合，并且这种注册关系都被封装在SelectionKey当中.</p>
+<blockquote>
+<p><strong>Selector维护的三种类型SelectionKey集合：</strong></p>
+</blockquote>
+<ul>
+<li><p><strong>已注册的键的集合(Registered key set)</strong></p>
+<p> 所有与选择器关联的通道所生成的键的集合称为已经注册的键的集合。并不是所有注册过的键都仍然有效。这个集合通过 <strong>keys()</strong> 方法返回，并且可能是空的。这个已注册的键的集合不是可以直接修改的；试图这么做的话将引发java.lang.UnsupportedOperationException。</p>
+</li>
+<li><p><strong>已选择的键的集合(Selected key set)</strong></p>
+<p>  所有与选择器关联的通道所生成的键的集合称为已经注册的键的集合。并不是所有注册过的键都仍然有效。这个集合通过 <strong>keys()</strong> 方法返回，并且可能是空的。这个已注册的键的集合不是可以直接修改的；试图这么做的话将引发java.lang.UnsupportedOperationException。    </p>
+</li>
+<li><p><strong>已取消的键的集合(Cancelled key set)</strong></p>
+<p> 已注册的键的集合的子集，这个集合包含了 <strong>cancel()</strong> 方法被调用过的键(这个键已经被无效化)，但它们还没有被注销。这个集合是选择器对象的私有成员，因而无法直接访问。</p>
+<p> <strong>注意：</strong><br>  当键被取消（ 可以通过<strong>isValid( )</strong> 方法来判断）时，它将被放在相关的选择器的已取消的键的集合里。注册不会立即被取消，但键会立即失效。当再次调用 <strong>select( )</strong> 方法时（或者一个正在进行的select()调用结束时），已取消的键的集合中的被取消的键将被清理掉，并且相应的注销也将完成。通道会被注销，而新的SelectionKey将被返回。当通道关闭时，所有相关的键会自动取消（记住，一个通道可以被注册到多个选择器上）。当选择器关闭时，所有被注册到该选择器的通道都将被注销，并且相关的键将立即被无效化（取消）。一旦键被无效化，调用它的与选择相关的方法就将抛出CancelledKeyException。</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>select()方法介绍：</strong></p>
+</blockquote>
+<p>在刚初始化的Selector对象中，这三个集合都是空的。 <strong>通过Selector的select（）方法可以选择已经准备就绪的通道</strong> （这些通道包含你感兴趣的的事件）。比如你对读就绪的通道感兴趣，那么select（）方法就会返回读事件已经就绪的那些通道。下面是Selector几个重载的select()方法：</p>
+<ul>
+<li>int select()：阻塞到至少有一个通道在你注册的事件上就绪了。 </li>
+<li>int select(long timeout)：和select()一样，但最长阻塞时间为timeout毫秒。 </li>
+<li>int selectNow()：非阻塞，只要有通道就绪就立刻返回。</li>
+</ul>
+<p><strong>select()方法返回的int值表示有多少通道已经就绪,是自上次调用select()方法后有多少通道变成就绪状态。之前在select（）调用时进入就绪的通道不会在本次调用中被记入，而在前一次select（）调用进入就绪但现在已经不在处于就绪的通道也不会被记入</strong>。例如：首次调用select()方法，如果有一个通道变成就绪状态，返回了1，若再次调用select()方法，如果另一个通道就绪了，它会再次返回1。如果对第一个就绪的channel没有做任何操作，现在就有两个就绪的通道，但在每次select()方法调用之间，只有一个通道就绪了。</p>
+<p><strong>一旦调用select()方法，并且返回值不为0时，则 可以通过调用Selector的selectedKeys()方法来访问已选择键集合</strong> 。如下：<br>Set selectedKeys=selector.selectedKeys();<br>进而可以放到和某SelectionKey关联的Selector和Channel。如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Set selectedKeys = selector.selectedKeys();</span><br><span class="line">Iterator keyIterator = selectedKeys.iterator();</span><br><span class="line"><span class="keyword">while</span>(keyIterator.hasNext()) &#123;</span><br><span class="line">    SelectionKey key = keyIterator.next();</span><br><span class="line">    <span class="keyword">if</span>(key.isAcceptable()) &#123;</span><br><span class="line">        <span class="comment">// a connection was accepted by a ServerSocketChannel.</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isConnectable()) &#123;</span><br><span class="line">        <span class="comment">// a connection was established with a remote server.</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">        <span class="comment">// a channel is ready for reading</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isWritable()) &#123;</span><br><span class="line">        <span class="comment">// a channel is ready for writing</span></span><br><span class="line">    &#125;</span><br><span class="line">    keyIterator.remove();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="5-停止选择的方法"><a href="#5-停止选择的方法" class="headerlink" title="5. 停止选择的方法"></a>5. 停止选择的方法</h3><p>选择器执行选择的过程，系统底层会依次询问每个通道是否已经就绪，这个过程可能会造成调用线程进入阻塞状态,那么我们有以下三种方式可以唤醒在select（）方法中阻塞的线程。</p>
+<ul>
+<li><strong>wakeup()方法</strong> ：通过调用Selector对象的wakeup（）方法让处在阻塞状态的select()方法立刻返回<br>该方法使得选择器上的第一个还没有返回的选择操作立即返回。如果当前没有进行中的选择操作，那么下一次对select()方法的一次调用将立即返回。</li>
+<li><strong>close()方法</strong> ：通过close（）方法关闭Selector，<br>该方法使得任何一个在选择操作中阻塞的线程都被唤醒（类似wakeup（）），同时使得注册到该Selector的所有Channel被注销，所有的键将被取消，但是Channel本身并不会关闭。</li>
+</ul>
+<h2 id="三-模板代码"><a href="#三-模板代码" class="headerlink" title="三  模板代码"></a>三  模板代码</h2><p><strong>一个服务端的模板代码：</strong></p>
+<p>有了模板代码我们在编写程序时，大多数时间都是在模板代码中添加相应的业务代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">ssc.socket().bind(<span class="keyword">new</span> InetSocketAddress(<span class="string">"localhost"</span>, <span class="number">8080</span>));</span><br><span class="line">ssc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">Selector selector = Selector.open();</span><br><span class="line">ssc.register(selector, SelectionKey.OP_ACCEPT);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">    <span class="keyword">int</span> readyNum = selector.select();</span><br><span class="line">    <span class="keyword">if</span> (readyNum == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Set&lt;SelectionKey&gt; selectedKeys = selector.selectedKeys();</span><br><span class="line">    Iterator&lt;SelectionKey&gt; it = selectedKeys.iterator();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span>(it.hasNext()) &#123;</span><br><span class="line">        SelectionKey key = it.next();</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(key.isAcceptable()) &#123;</span><br><span class="line">            <span class="comment">// 接受连接</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">            <span class="comment">// 通道可读</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (key.isWritable()) &#123;</span><br><span class="line">            <span class="comment">// 通道可写</span></span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        it.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="四-客户端与服务端简单交互实例"><a href="#四-客户端与服务端简单交互实例" class="headerlink" title="四 客户端与服务端简单交互实例"></a>四 客户端与服务端简单交互实例</h2><p><strong>服务端：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> selector;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.net.InetSocketAddress;</span><br><span class="line"><span class="keyword">import</span> java.nio.ByteBuffer;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.SelectionKey;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.Selector;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.ServerSocketChannel;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.SocketChannel;</span><br><span class="line"><span class="keyword">import</span> java.util.Iterator;</span><br><span class="line"><span class="keyword">import</span> java.util.Set;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebServer</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ServerSocketChannel ssc = ServerSocketChannel.open();</span><br><span class="line">            ssc.socket().bind(<span class="keyword">new</span> InetSocketAddress(<span class="string">"127.0.0.1"</span>, <span class="number">8000</span>));</span><br><span class="line">            ssc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">            Selector selector = Selector.open();</span><br><span class="line">            <span class="comment">// 注册 channel，并且指定感兴趣的事件是 Accept</span></span><br><span class="line">            ssc.register(selector, SelectionKey.OP_ACCEPT);</span><br><span class="line"></span><br><span class="line">            ByteBuffer readBuff = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">            ByteBuffer writeBuff = ByteBuffer.allocate(<span class="number">128</span>);</span><br><span class="line">            writeBuff.put(<span class="string">"received"</span>.getBytes());</span><br><span class="line">            writeBuff.flip();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">int</span> nReady = selector.select();</span><br><span class="line">                Set&lt;SelectionKey&gt; keys = selector.selectedKeys();</span><br><span class="line">                Iterator&lt;SelectionKey&gt; it = keys.iterator();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">while</span> (it.hasNext()) &#123;</span><br><span class="line">                    SelectionKey key = it.next();</span><br><span class="line">                    it.remove();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (key.isAcceptable()) &#123;</span><br><span class="line">                        <span class="comment">// 创建新的连接，并且把连接注册到selector上，而且，</span></span><br><span class="line">                        <span class="comment">// 声明这个channel只对读操作感兴趣。</span></span><br><span class="line">                        SocketChannel socketChannel = ssc.accept();</span><br><span class="line">                        socketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                        socketChannel.register(selector, SelectionKey.OP_READ);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">                        SocketChannel socketChannel = (SocketChannel) key.channel();</span><br><span class="line">                        readBuff.clear();</span><br><span class="line">                        socketChannel.read(readBuff);</span><br><span class="line"></span><br><span class="line">                        readBuff.flip();</span><br><span class="line">                        System.out.println(<span class="string">"received : "</span> + <span class="keyword">new</span> String(readBuff.array()));</span><br><span class="line">                        key.interestOps(SelectionKey.OP_WRITE);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> <span class="keyword">if</span> (key.isWritable()) &#123;</span><br><span class="line">                        writeBuff.rewind();</span><br><span class="line">                        SocketChannel socketChannel = (SocketChannel) key.channel();</span><br><span class="line">                        socketChannel.write(writeBuff);</span><br><span class="line">                        key.interestOps(SelectionKey.OP_READ);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>客户端：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> selector;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.net.InetSocketAddress;</span><br><span class="line"><span class="keyword">import</span> java.nio.ByteBuffer;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.SocketChannel;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebClient</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            SocketChannel socketChannel = SocketChannel.open();</span><br><span class="line">            socketChannel.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"127.0.0.1"</span>, <span class="number">8000</span>));</span><br><span class="line"></span><br><span class="line">            ByteBuffer writeBuffer = ByteBuffer.allocate(<span class="number">32</span>);</span><br><span class="line">            ByteBuffer readBuffer = ByteBuffer.allocate(<span class="number">32</span>);</span><br><span class="line"></span><br><span class="line">            writeBuffer.put(<span class="string">"hello"</span>.getBytes());</span><br><span class="line">            writeBuffer.flip();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                writeBuffer.rewind();</span><br><span class="line">                socketChannel.write(writeBuffer);</span><br><span class="line">                readBuffer.clear();</span><br><span class="line">                socketChannel.read(readBuffer);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>运行结果：</strong></p>
+<p>先运行服务端，再运行客户端，服务端会不断收到客户端发送过来的消息。<br><img src="https://user-gold-cdn.xitu.io/2018/5/16/1636720b53ff3a72?w=1090&amp;h=217&amp;f=png&amp;s=15376" alt="运行结果"></p>
+<p><strong>其他实例：</strong></p>
+<p><a href="http://www.coolblog.xyz/2018/04/04/%E5%9F%BA%E4%BA%8E-Java-NIO-%E5%AE%9E%E7%8E%B0%E7%AE%80%E5%8D%95%E7%9A%84-HTTP-%E6%9C%8D%E5%8A%A1%E5%99%A8/" target="_blank" rel="noopener">《基于 Java NIO 实现简单的 HTTP 服务器》</a></p>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a href="https://docs.oracle.com/javase/8/docs/api/" target="_blank" rel="noopener">官方JDK相关文档</a></p>
+<p><a href="http://tutorials.jenkov.com/java-nio/channels.html" target="_blank" rel="noopener">谷歌搜索排名第一的Java NIO教程</a></p>
+<p><a href="https://book.douban.com/subject/1433583/" target="_blank" rel="noopener">《Java NIO》</a></p>
+<p><a href="https://book.douban.com/subject/26320992/" target="_blank" rel="noopener">《Java 8编程官方参考教程（第9版）》</a></p>
+<p><a href="https://blog.csdn.net/jeffleo/article/details/54695959" target="_blank" rel="noopener">Java NIO Selector详解（含多人聊天室实例）</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/27434028" target="_blank" rel="noopener">Java NIO(6): Selector</a></p>
+<p><strong>欢迎关注我的微信公众号:”Java面试通关手册”（一个有温度的微信公众号，期待与你共同进步~~~坚持原创，分享美文，分享各种Java学习资源）：</strong><br><img src="https://user-gold-cdn.xitu.io/2018/5/13/163587eed3857758?w=300&amp;h=390&amp;f=png&amp;s=13332" alt=""></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Selector（选择器）介绍"><span class="toc-text">一 Selector（选择器）介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Selector（选择器）的使用方法介绍"><span class="toc-text">二 Selector（选择器）的使用方法介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Selector的创建"><span class="toc-text">1. Selector的创建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-注册Channel到Selector"><span class="toc-text">2. 注册Channel到Selector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注意："><span class="toc-text">注意：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-SelectionKey介绍"><span class="toc-text">3. SelectionKey介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-从Selector中选择channel-Selecting-Channels-via-a-Selector"><span class="toc-text">4. 从Selector中选择channel(Selecting Channels via a Selector)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-停止选择的方法"><span class="toc-text">5. 停止选择的方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-模板代码"><span class="toc-text">三  模板代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-客户端与服务端简单交互实例"><span class="toc-text">四 客户端与服务端简单交互实例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考："><span class="toc-text">参考：</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2018/05/13/Java NIO 之 Channel（通道）/" class="next">Next post Java NIO 之 Channel（通道） &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
