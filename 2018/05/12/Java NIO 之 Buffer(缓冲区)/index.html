@@ -133,12 +133,12 @@ Buffer本质上就是一块内存区，可以用来写入数据，并在稍后�
   <article id="post">
     <h1>Java NIO 之 Buffer(缓冲区)</h1>
     <p class="page-title-sub">
-      <span id = "post-title-date">撰写于 2018-05-12</span>
+      <span id = "post-title-date">Created at 2018-05-12</span>
       
-        <span id = "post-title-updated">修改于 2018-05-14</span>
+        <span id = "post-title-updated">Updated at 2018-05-14</span>
       
       
-      <span id = "post-title-categories">分类
+      <span id = "post-title-categories">Category
       
       
         
@@ -149,7 +149,7 @@ Buffer本质上就是一块内存区，可以用来写入数据，并在稍后�
       
       
       <span id = "post-title-tags">
-      标签
+      Tag
       
       
         
@@ -339,10 +339,10 @@ Buffer本质上就是一块内存区，可以用来写入数据，并在稍后�
 
   </article>
   <div class="random-toc-area">
-  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">显示目录</button>
-  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">隐藏目录</button>
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
   <div class="random-toc">
-    <h2>目录</h2>
+    <h2>Table of Content</h2>
     <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-Buffer-缓冲区-介绍"><span class="toc-text">一 Buffer(缓冲区)介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#利用Buffer读写数据，通常遵循四个步骤："><span class="toc-text">利用Buffer读写数据，通常遵循四个步骤：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Buffer的容量，位置，上限（Buffer-Capacity-Position-and-Limit）"><span class="toc-text">Buffer的容量，位置，上限（Buffer Capacity, Position and Limit）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#容量（Capacity）"><span class="toc-text">容量（Capacity）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#位置（Position）"><span class="toc-text">位置（Position）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#上限（Limit）"><span class="toc-text">上限（Limit）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-Buffer的常见方法"><span class="toc-text">二 Buffer的常见方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-Buffer的使用方式-方法介绍"><span class="toc-text">三 Buffer的使用方式/方法介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#分配缓冲区（Allocating-a-Buffer）"><span class="toc-text">分配缓冲区（Allocating a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#写入数据到缓冲区（Writing-Data-to-a-Buffer）"><span class="toc-text">写入数据到缓冲区（Writing Data to a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#翻转（flip-）"><span class="toc-text">翻转（flip()）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从Buffer读取数据（Reading-Data-from-a-Buffer）"><span class="toc-text">从Buffer读取数据（Reading Data from a Buffer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rewind"><span class="toc-text">rewind()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clear-and-compact"><span class="toc-text">clear() and compact()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mark-与reset-方法"><span class="toc-text">mark()与reset()方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#equals-and-compareTo"><span class="toc-text">equals() and compareTo()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-Buffer常用方法测试"><span class="toc-text">四 Buffer常用方法测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考："><span class="toc-text">参考：</span></a></li></ol>
   </div>
 </div>
@@ -350,13 +350,13 @@ Buffer本质上就是一块内存区，可以用来写入数据，并在稍后�
   
 <nav id="pagination">
   
-    <a href="/2018/05/13/Java NIO 之 Channel（通道）/" class="prev">&larr; 上一篇 Java NIO 之 Channel（通道）</a>
+    <a href="/2018/05/13/Java NIO 之 Channel（通道）/" class="prev">&larr; Prev post Java NIO 之 Channel（通道）</a>
   
 
   
 
   
-    <a href="/2018/05/11/Java NIO  概览/" class="next">下一篇 Java NIO  概览 &rarr;</a>
+    <a href="/2018/05/11/Java NIO  概览/" class="next">Next post Java NIO  概览 &rarr;</a>
   
 </nav>
 
