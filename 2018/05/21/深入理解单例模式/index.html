@@ -1,0 +1,449 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="目录:
+[TOC]
+前言初遇设计模式在上个寒假，当时把每个设计模式过了一遍，对设计模式有了一个最初级的了解。这个学期借了几本设计模式的书籍看，听了老师的设计模式课，对设计模式算是有个更进一步的认识。后面可能会不定期更新一下自己对于设计模式的理解。每个设计模式看似很简单，实则想要在一个完整的系统中应用还是非常非常难的。然后我的水品也非常非常有限，代码量也不是很多，只能通过阅读书籍、思考别人的编...">
+  
+  <title>深入理解单例模式 [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+    <div class="item prev">
+      <a href="/2018/05/21/深入理解工厂模式/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        深入理解工厂模式
+      </div>
+    </div>
+  
+  
+    <div class="item next">
+      <a href="/2018/05/20/分布式系统的经典基础理论/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        分布式系统的经典基础理论
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>深入理解单例模式</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2018-05-21</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-29</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/设计模式/">设计模式</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/设计模式/">设计模式</a>
+      
+      </span>
+      
+    </p>
+    
+    <p><strong>目录:</strong></p>
+<p>[TOC]</p>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>初遇设计模式在上个寒假，当时把每个设计模式过了一遍，对设计模式有了一个最初级的了解。这个学期借了几本设计模式的书籍看，听了老师的设计模式课，对设计模式算是有个更进一步的认识。后面可能会不定期更新一下自己对于设计模式的理解。每个设计模式看似很简单，实则想要在一个完整的系统中应用还是非常非常难的。然后我的水品也非常非常有限，代码量也不是很多，只能通过阅读书籍、思考别人的编码经验以及结合自己的编码过程中遇到的问题来总结。</p>
+<p>怎么用-&gt;怎么用才好-&gt;怎么与其他模式结合使用，我想这是每个开发人员都需要逾越的一道鸿沟。</p>
+<h1 id="1-单例模式简介"><a href="#1-单例模式简介" class="headerlink" title="1 单例模式简介"></a>1 单例模式简介</h1><h2 id="1-1-定义"><a href="#1-1-定义" class="headerlink" title="1.1 定义"></a>1.1 定义</h2><p>保证一个类仅有一个实例，并提供一个访问它的全局访问点。</p>
+<h2 id="1-2-为什么要用单例模式呢？"><a href="#1-2-为什么要用单例模式呢？" class="headerlink" title="1.2 为什么要用单例模式呢？"></a>1.2 为什么要用单例模式呢？</h2><p>在我们的系统中，有一些对象其实我们只需要一个，比如说：线程池、缓存、对话框、注册表、日志对象、充当打印机、显卡等设备驱动程序的对象。事实上，这一类对象只能有一个实例，如果制造出多个实例就可能会导致一些问题的产生，比如：程序的行为异常、资源使用过量、或者不一致性的结果。</p>
+<p> <strong>简单来说使用单例模式可以带来下面几个好处:</strong></p>
+<ul>
+<li><strong>对于频繁使用的对象，可以省略创建对象所花费的时间，这对于那些重量级对象而言，是非常可观的一笔系统开销；</strong></li>
+<li><strong>由于 new 操作的次数减少，因而对系统内存的使用频率也会降低，这将减轻 GC 压力，缩短 GC 停顿时间。</strong></li>
+</ul>
+<h2 id="1-3-为什么不使用全局变量确保一个类只有一个实例呢？"><a href="#1-3-为什么不使用全局变量确保一个类只有一个实例呢？" class="headerlink" title="1.3 为什么不使用全局变量确保一个类只有一个实例呢？"></a>1.3 为什么不使用全局变量确保一个类只有一个实例呢？</h2><p>我们知道全局变量分为静态变量和实例变量，静态变量也可以保证该类的实例只存在一个。<br>只要程序加载了类的字节码，不用创建任何实例对象，静态变量就会被分配空间，静态变量就可以被使用了。</p>
+<p>但是，如果说这个对象非常消耗资源，而且程序某次的执行中一直没用，这样就造成了资源的浪费。<strong>利用单例模式的话，我们就可以实现在需要使用时才创建对象，这样就避免了不必要的资源浪费。</strong> 不仅仅是因为这个原因，在程序中我们要尽量避免全局变量的使用，大量使用全局变量给程序的调试、维护等带来困难。</p>
+<h1 id="2-单例的模式的实现"><a href="#2-单例的模式的实现" class="headerlink" title="2 单例的模式的实现"></a>2 单例的模式的实现</h1><p> <strong>通常单例模式在Java语言中，有两种构建方式：</strong></p>
+<ul>
+<li><strong>饿汉方式</strong>。指全局的单例实例在类装载时构建</li>
+<li><strong>懒汉方式</strong>。指全局的单例实例在第一次被使用时构建。</li>
+</ul>
+<p><strong>不管是那种创建方式，它们通常都存在下面几点相似处：</strong></p>
+<ul>
+<li>单例类必须要有一个 private 访问级别的构造函数，只有这样，才能确保单例不会在系统中的其他代码内被实例化;</li>
+<li>instance 成员变量和 uniqueInstance 方法必须是 static 的。</li>
+</ul>
+<h2 id="2-1-饿汉方式-线程安全"><a href="#2-1-饿汉方式-线程安全" class="headerlink" title="2.1 饿汉方式(线程安全)"></a>2.1 饿汉方式(线程安全)</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line">   <span class="comment">//在静态初始化器中创建单例实例，这段代码保证了线程安全</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton uniqueInstance = <span class="keyword">new</span> Singleton();</span><br><span class="line">    <span class="comment">//Singleton类只有一个构造方法并且是被private修饰的，所以用户无法通过new方法创建该对象实例</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> uniqueInstance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所谓 <strong>“饿汉方式”</strong>  就是说JVM在加载这个类时就马上创建此唯一的单例实例，不管你用不用，先创建了再说，如果一直没有被使用，便浪费了空间，典型的空间换时间，每次调用的时候，就不需要再判断，节省了运行时间。</p>
+<h2 id="2-2-懒汉式（非线程安全和synchronized关键字线程安全版本-）"><a href="#2-2-懒汉式（非线程安全和synchronized关键字线程安全版本-）" class="headerlink" title="2.2 懒汉式（非线程安全和synchronized关键字线程安全版本 ）"></a>2.2 懒汉式（非线程安全和synchronized关键字线程安全版本 ）</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;  </span><br><span class="line">      <span class="keyword">private</span> <span class="keyword">static</span> Singleton uniqueInstance;  </span><br><span class="line">      <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span> <span class="params">()</span></span>&#123;</span><br><span class="line">      &#125;   </span><br><span class="line">      <span class="comment">//没有加入synchronized关键字的版本是线程不安全的</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="comment">//判断当前单例是否已经存在，若存在则返回，不存在则再建立单例</span></span><br><span class="line">	      <span class="keyword">if</span> (uniqueInstance == <span class="keyword">null</span>) &#123;  </span><br><span class="line">	          uniqueInstance = <span class="keyword">new</span> Singleton();  </span><br><span class="line">	      &#125;  </span><br><span class="line">	      <span class="keyword">return</span> uniqueInstance;  </span><br><span class="line">      &#125;  </span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>所谓 <strong>“饿汉方式”</strong>  就是说单例实例在第一次被使用时构建，而不是在JVM在加载这个类时就马上创建此唯一的单例实例。</p>
+<p>但是上面这种方式很明显是线程不安全的，如果多个线程同时访问getInstance()方法时就会出现问题。如果想要保证线程安全，一种比较常见的方式就是在getInstance() 方法前加上synchronized关键字，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> Singleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;  </span><br><span class="line"> <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;  </span><br><span class="line">     uniqueInstance = <span class="keyword">new</span> Singleton();  </span><br><span class="line"> &#125;  </span><br><span class="line"> <span class="keyword">return</span> uniqueInstance;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们知道synchronized关键字偏重量级锁。虽然在JavaSE1.6之后synchronized关键字进行了主要包括：为了减少获得锁和释放锁带来的性能消耗而引入的偏向锁和轻量级锁以及其它各种优化之后执行效率有了显著提升。</p>
+<p>但是在程序中每次使用getInstance() 都要经过synchronized加锁这一层，这难免会增加getInstance()的方法的时间消费，而且还可能会发生阻塞。我们下面介绍到的 <strong>双重检查加锁版本</strong> 就是为了解决这个问题而存在的。</p>
+<h2 id="2-3-懒汉式-双重检查加锁版本"><a href="#2-3-懒汉式-双重检查加锁版本" class="headerlink" title="2.3 懒汉式(双重检查加锁版本)"></a>2.3 懒汉式(双重检查加锁版本)</h2><p><strong>利用双重检查加锁（double-checked locking），首先检查是否实例已经创建，如果尚未创建，“才”进行同步。这样以来，只有一次同步，这正是我们想要的效果。</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//volatile保证，当uniqueInstance变量被初始化成Singleton实例时，多个线程可以正确处理uniqueInstance变量</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">static</span> Singleton uniqueInstance;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="comment">//检查实例，如果不存在，就进入同步代码块</span></span><br><span class="line">        <span class="keyword">if</span> (uniqueInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//只有第一次才彻底执行这里的代码</span></span><br><span class="line">            <span class="keyword">synchronized</span>(Singleton.class) &#123;</span><br><span class="line">               <span class="comment">//进入同步代码块后，再检查一次，如果仍是null，才创建实例</span></span><br><span class="line">                <span class="keyword">if</span> (uniqueInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    uniqueInstance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> uniqueInstance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>很明显，这种方式相比于使用synchronized关键字的方法，可以大大减少getInstance() 的时间消费。</p>
+<p>我们上面使用到了volatile关键字来保证数据的可见性，关于volatile关键字的内容可以看我的这篇文章：<br><strong>《Java多线程学习（三）volatile关键字》：</strong> <a href="https://blog.csdn.net/qq_34337272/article/details/79680771" target="_blank" rel="noopener">https://blog.csdn.net/qq_34337272/article/details/79680771</a></p>
+<blockquote>
+<p><strong>注意：</strong> 双重检查加锁版本不适用于1.4及更早版本的Java。<br>1.4及更早版本的Java中，许多JVM对于volatile关键字的实现会导致双重检查加锁的失效。</p>
+</blockquote>
+<h2 id="2-4-懒汉式（登记式-静态内部类方式）"><a href="#2-4-懒汉式（登记式-静态内部类方式）" class="headerlink" title="2.4 懒汉式（登记式/静态内部类方式）"></a>2.4 懒汉式（登记式/静态内部类方式）</h2><p><strong>静态内部实现的单例是懒加载的且线程安全。</strong></p>
+<p>只有通过显式调用 getInstance 方法时，才会显式装载 SingletonHolder 类，从而实例化 instance（只有第一次使用这个单例的实例的时候才加载，同时不会有线程安全问题）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SingletonHolder</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton INSTANCE = <span class="keyword">new</span> Singleton();  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span> <span class="params">()</span></span>&#123;&#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton <span class="title">getInstance</span><span class="params">()</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">return</span> SingletonHolder.INSTANCE;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-5-饿汉式（枚举方式）"><a href="#2-5-饿汉式（枚举方式）" class="headerlink" title="2.5 饿汉式（枚举方式）"></a>2.5 饿汉式（枚举方式）</h2><p>这种实现方式还没有被广泛采用，但这是实现单例模式的最佳方法。 <strong>它更简洁，自动支持序列化机制，绝对防止多次实例化</strong> （如果单例类实现了Serializable接口，默认情况下每次反序列化总会创建一个新的实例对象，关于单例与序列化的问题可以查看这一篇文章<a href="http://www.hollischuang.com/archives/1144" target="_blank" rel="noopener">《单例与序列化的那些事儿》</a>），同时这种方式也是《Effective Java 》以及《Java与模式》的作者推荐的方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Singleton &#123;</span><br><span class="line">	 <span class="comment">//定义一个枚举的元素，它就是 Singleton 的一个实例</span></span><br><span class="line">    INSTANCE;  </span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomeThing</span><span class="params">()</span> </span>&#123;  </span><br><span class="line">	     System.out.println(<span class="string">"枚举方法实现单例"</span>);</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>使用方法：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ESTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		Singleton singleton = Singleton.INSTANCE;</span><br><span class="line">		singleton.doSomeThing();<span class="comment">//output:枚举方法实现单例</span></span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>《Effective Java 中文版 第二版》</strong></p>
+<blockquote>
+<p>这种方法在功能上与公有域方法相近，但是它更加简洁，无偿提供了序列化机制，绝对防止多次实例化，即使是在面对复杂序列化或者反射攻击的时候。虽然这种方法还没有广泛采用，但是单元素的枚举类型已经成为实现Singleton的最佳方法。 —-《Effective Java 中文版 第二版》</p>
+</blockquote>
+<p><strong>《Java与模式》</strong></p>
+<blockquote>
+<p>《Java与模式》中，作者这样写道，使用枚举来实现单实例控制会更加简洁，而且无偿地提供了序列化机制，并由JVM从根本上提供保障，绝对防止多次实例化，是更简洁、高效、安全的实现单例的方式。</p>
+</blockquote>
+<h2 id="2-6-总结"><a href="#2-6-总结" class="headerlink" title="2.6 总结"></a>2.6 总结</h2><p>我们主要介绍到了以下几种方式实现单例模式：</p>
+<ul>
+<li>饿汉方式(线程安全）</li>
+<li>懒汉式（非线程安全和synchronized关键字线程安全版本)</li>
+<li>懒汉式(双重检查加锁版本)</li>
+<li>懒汉式（登记式/静态内部类方式）</li>
+<li>饿汉式（枚举方式）</li>
+</ul>
+<p><strong>参考：</strong></p>
+<p>《Head First 设计模式》</p>
+<p>《Effective Java 中文版 第二版》</p>
+<p><a href="https://itimetraveler.github.io/2016/09/08/【Java】设计模式：深入理解单例模式/#6、枚举" target="_blank" rel="noopener">【Java】设计模式：深入理解单例模式</a></p>
+<p>我是Snailclimb,一个以架构师为5年之内目标的小小白。<br>欢迎关注我的微信公众号:”<strong>Java面试通关手册</strong>“（一个有温度的微信公众号，期待与你共同进步~~~坚持原创，分享美文，分享各种Java学习资源）：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/25/16396cf05d1f4fbf?w=180&amp;h=234&amp;f=png&amp;s=28541" alt="我的公众号"></p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-单例模式简介"><span class="toc-text">1 单例模式简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-定义"><span class="toc-text">1.1 定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-为什么要用单例模式呢？"><span class="toc-text">1.2 为什么要用单例模式呢？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-为什么不使用全局变量确保一个类只有一个实例呢？"><span class="toc-text">1.3 为什么不使用全局变量确保一个类只有一个实例呢？</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-单例的模式的实现"><span class="toc-text">2 单例的模式的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-饿汉方式-线程安全"><span class="toc-text">2.1 饿汉方式(线程安全)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-懒汉式（非线程安全和synchronized关键字线程安全版本-）"><span class="toc-text">2.2 懒汉式（非线程安全和synchronized关键字线程安全版本 ）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-懒汉式-双重检查加锁版本"><span class="toc-text">2.3 懒汉式(双重检查加锁版本)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-懒汉式（登记式-静态内部类方式）"><span class="toc-text">2.4 懒汉式（登记式/静态内部类方式）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-5-饿汉式（枚举方式）"><span class="toc-text">2.5 饿汉式（枚举方式）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-6-总结"><span class="toc-text">2.6 总结</span></a></li></ol></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+    <a href="/2018/05/21/深入理解工厂模式/" class="prev">&larr; Prev post 深入理解工厂模式</a>
+  
+
+  
+
+  
+    <a href="/2018/05/20/分布式系统的经典基础理论/" class="next">Next post 分布式系统的经典基础理论 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
