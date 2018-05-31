@@ -1,0 +1,423 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <meta name="author" content="Snailclimb">
+  
+  
+  <meta name="keywords" content="Snailclimb">
+  
+  
+  
+    <meta name="description" content="原则 #1：The Reason It All Exists(它存在的原因)软件系统存在的原因：为用户提供价值。所有的决定都应该考虑到这一点。在指定系统需求之前，在关注系统的各个功能之前，在确定硬件平台或开发过程之前，问问自己以下问题：这是否能为系统真正增加价值？如果答案是否定的，那就不要去做。所有其他原则都以这一条为先。
+
+原则 #2：KISS(Keep It Simple, Stupid...">
+  
+  <title>软件开发的七条原则 [ Snailclimb的个人博客 ]</title>
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+  <link rel="stylesheet" href="/css/random.css">
+<link rel="stylesheet" href="/css/vegas.min.css">
+<link rel="stylesheet" href="/css/highlight-railscasts.css">
+<link rel="stylesheet" href="/css/jquery.fancybox.css">
+<link rel="stylesheet" href="/css/iconfont/iconfont.css">
+<link rel="stylesheet" href="/css/jquery.fancybox-thumbs.css">
+<link rel="stylesheet" href="/css/plyr.css">
+  
+</head>
+
+<body>
+<div class="side-navigate hide-area">
+  
+  
+    <div class="item next">
+      <a href="/2018/05/21/深入理解单例模式/">
+        <div class="item-icon"></div>
+      </a>
+      <div class="item-title">
+        深入理解单例模式
+      </div>
+    </div>
+  
+</div>
+<div id="outer-container" class="hide-area">
+<div id="container">
+  <div id="menu-outer" class="slide-down">
+    <div id="menu-inner">
+      <div id="brand">
+        
+        <a onClick="openUserCard()">
+          <img id="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg"/>
+          <div id="homelink">Snailclimb的个人博客</div>
+        </a>
+      </div>
+      <div id="menu-list">
+        <ul>
+        
+        
+          
+            <li>
+          
+            <a href="/">首页</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/archives">文章</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/tags">标签</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/categories">分类</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/about">关于</a>
+            
+          </li>
+        
+          
+            <li>
+          
+            <a href="/navigate">导航</a>
+            
+          </li>
+        
+        </ul>
+      </div>
+      <div id="show-menu">
+        <button>Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="content-outer">
+    <div id="content-inner">
+      
+      
+  <article id="post">
+    <h1>软件开发的七条原则</h1>
+    <p class="page-title-sub">
+      <span id = "post-title-date">Created at 2018-05-28</span>
+      
+        <span id = "post-title-updated">Updated at 2018-05-31</span>
+      
+      
+      <span id = "post-title-categories">Category
+      
+      
+        
+        
+        <a href="/categories/杂文闲记/">杂文闲记</a>
+      
+      </span>
+      
+      
+      <span id = "post-title-tags">
+      Tag
+      
+      
+        
+        
+        <a href="/tags/杂文闲记/">杂文闲记</a>
+      
+      </span>
+      
+    </p>
+    
+    <h3 id="原则-1：The-Reason-It-All-Exists-它存在的原因"><a href="#原则-1：The-Reason-It-All-Exists-它存在的原因" class="headerlink" title="原则 #1：The Reason It All Exists(它存在的原因)"></a>原则 #1：The Reason It All Exists(它存在的原因)</h3><p><strong>软件系统存在的原因：为用户提供价值。所有的决定都应该考虑到这一点。在指定系统需求之前，在关注系统的各个功能之前，在确定硬件平台或开发过程之前，问问自己以下问题：这是否能为系统真正增加价值？如果答案是否定的，那就不要去做。所有其他原则都以这一条为先。</strong></p>
+<p><img src="http://static.codeceo.com/images/2018/05/7-principles-1.jpg" alt="原则1：存在的原因"></p>
+<h3 id="原则-2：KISS-Keep-It-Simple-Stupid"><a href="#原则-2：KISS-Keep-It-Simple-Stupid" class="headerlink" title="原则 #2：KISS(Keep It Simple, Stupid! )"></a>原则 #2：KISS(Keep It Simple, Stupid! )</h3><p>软件设计不是一个偶然的过程。任何设计工作都需要考虑许多因素。<strong>所有的设计应该尽可能简单，但不要过于简化。</strong></p>
+<p><img src="http://static.codeceo.com/images/2018/05/7-principles-2.jpg" alt="原则#2：KISS"></p>
+<blockquote>
+<p>复杂性是你的敌人。任何傻瓜都能让事情变得复杂。反之则很难。<br>——Richard Branson</p>
+</blockquote>
+<p>这有利于设计出更易于理解和易于维护的系统。但并不是说应该以简单的名义抛弃一些功能，甚至是内部功能。的确，更优雅的设计通常是更简单的设计。</p>
+<blockquote>
+<p>简单是终极的复杂。<br>——Leonardo Da Vinci</p>
+</blockquote>
+<p>简单也并不意味着快速和肮脏。 <strong>事实上，为了简化，经常需要很多思考和多次迭代的工作。 收益是更易于维护且不易出错的软件。</strong></p>
+<p><img src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-29/25208802.jpg" alt=""></p>
+<blockquote>
+<p>这是我的咒语之一——重点和简单。 简单可能比复杂更难; 你必须努力工作，让自己的思维变得简单。<br>——Steve Jobs</p>
+</blockquote>
+<h3 id="原则-3：Maintain-the-vision-保持愿景"><a href="#原则-3：Maintain-the-vision-保持愿景" class="headerlink" title="原则 #3：Maintain the vision(保持愿景)"></a>原则 #3：Maintain the vision(保持愿景)</h3><p><strong>明晰的愿景对于软件项目的成功至关重要。否则，项目最终基本上都将陷入左右摇摆的境地</strong>。 没有概念的完整性，系统就很有可能成为不兼容设计的拼凑物——被错误的螺丝钉连接在一起。</p>
+<blockquote>
+<p>概念完整性是系统设计中要考虑的最重要因素。<br>——Fred Brooks</p>
+</blockquote>
+<p><img src="http://hangaroundtheweb.com/wp-content/uploads/2018/04/Eye-blue-pupil-and-vision-HD-photo-by-Daniil-Kuz%CC%8Celev-kuzelevdaniil-on-Unsplash.jpg" alt="原则 #3：保持愿景"></p>
+<blockquote>
+<p>建立一个干净的内部结构对构建一个易于理解、可扩展和重组、并且可维护和可测试的系统而言至关重要。<br>——Stroustrup</p>
+</blockquote>
+<p><img src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-29/47758109.jpg" alt="Grady Booch"></p>
+<blockquote>
+<p>只有通过对系统架构的清晰认识，才有可能发现常见的抽象和机制。 利用这种通用性最终导致系统更简单，因此更小，更可靠。</p>
+<ul>
+<li>Grady Booch</li>
+</ul>
+</blockquote>
+<p>妥协软件系统的架构愿景会削弱并将最终破坏系统，甚至是设计得尽善尽美的系统。拥有一个能够实现愿景和执行合规性的授权架构师有助于确保软件项目的成功。</p>
+<h3 id="原则-4：What-you-produce-others-will-consume-生产其他人消费的东西"><a href="#原则-4：What-you-produce-others-will-consume-生产其他人消费的东西" class="headerlink" title="原则 #4：What you produce others will consume(生产其他人消费的东西"></a>原则 #4：What you produce others will consume(生产其他人消费的东西</h3><p>)<br>很少有工业强度的软件被生产和被使用。以某种方式，其他人的使用，维护，记录或以其他方式都依赖于能够理解您的系统。因此，始终指定、设计，以及实现了解他人将有助于了解你在做什么。任何软件开发产品的受众都可能很大。</p>
+<p><img src="http://static.codeceo.com/images/2018/05/7-principles-4.jpg" alt="原则 #4：生产其他人消费的东西"></p>
+<p>着眼于用户的指定。牢记创建这个软件系统的初衷。<strong>关注那些必须维护和扩展系统的代码</strong>。有的人可能需要调试你编写的代码，这使得他们成为你的代码用户。<strong>方便他们工作可以为你的系统增添价值。</strong></p>
+<h3 id="Principle-5-Be-open-to-the-future（面向未来）"><a href="#Principle-5-Be-open-to-the-future（面向未来）" class="headerlink" title="Principle #5: Be open to the future（面向未来）"></a>Principle #5: Be open to the future（面向未来）</h3><p>寿命较长的系统具有更大的价值。在今天的计算环境中，当规格发生变化并且硬件平台在几个月之前已经过时时，软件寿命通常以几个月而不是几年来测量。然而，真正的工业级软件系统必须能坚持更长时间。要做到这一点，系统必须能够适应这些改变。可以成功实现这些目标的系统都是从一开始就以这种方式而设计的。绝对不要在设计时自找麻烦。总是问“假使这样，那会怎么样”，并通过创建解决一般问题，而非仅仅是具体问题的系统来准备好所有可能的答案。这很可能导致整个系统的重用。</p>
+<p><img src="http://static.codeceo.com/images/2018/05/7-principles-5.jpg" alt="Principle #5: Be open to the future（面向未来）"></p>
+<p>滥用这个原则是我看到很多开发者出错的地方。作为开发者，除非我们也是该领域专家，否则我们经常会猜错系统将如何改变。</p>
+<blockquote>
+<p>系统确实发生了变化，但通常会殊途同归，因而广义的解决方案就变成了包袱。<br>——Sal Mangano</p>
+</blockquote>
+<h3 id="Principle-6-Plan-Ahead-for-Reuse-未雨绸缪，提前计划重用"><a href="#Principle-6-Plan-Ahead-for-Reuse-未雨绸缪，提前计划重用" class="headerlink" title="Principle #6: Plan Ahead for Reuse(未雨绸缪，提前计划重用)"></a>Principle #6: Plan Ahead for Reuse(未雨绸缪，提前计划重用)</h3><p><strong>重复使用之前的代码和设计模式可以节省时间和精力。实现高水平的重用可以说是开发软件系统最难的目标。</strong> 代码和设计的重用已被宣称为使用面向对象技术的主要优势。但是，这项投资的回报并不是自动的。为了利用面向对象编程提供的重用可能性，需要预先考虑和规划。在系统开发过程的每个级别都有很多技术来实现重用。<strong>详细设计和代码级别的重用技术不但众所周知而且是有文档的</strong>。<br><img src="http://static.codeceo.com/images/2018/05/7-principles-6.jpg" alt=" Principle #6: Plan Ahead for Reuse(未雨绸缪，提前计划重用)"></p>
+<p><strong>如何重用你不知道的东西？</strong></p>
+<p>那么试着去提前规划重用，这样不仅可以降低成本还可以提高可重用组件及其所在系统的价值。</p>
+<h3 id="Principle-7-Think-（思考，三思而后行）"><a href="#Principle-7-Think-（思考，三思而后行）" class="headerlink" title="Principle #7: Think!（思考，三思而后行）"></a>Principle #7: Think!（思考，三思而后行）</h3><p>这最后一条原则可能是最容易被忽视的<strong>。在行动之前形成一条清晰和完整的思路几乎总能够产出更好的结果。只有你考虑到了某个问题，你才更有可能解决它。你还可以从中获得有关如何再次正确做这件事的知识。</strong><br><img src="http://static.codeceo.com/images/2018/05/7-principles-7.jpg" alt=" Principle #7: Think!（思考）"></p>
+<p><strong>如果你确实考虑到了某件事情，但仍然做错了，那么这就是你宝贵的经验。</strong>思考还有一个成果是可以学习到当你不知道某个东西，此时该如何研究答案的过程。</p>
+<p><img src="http://static.codeceo.com/images/2018/05/7-principles-8.png" alt="Principle #7: Think!（思考）"><br>当你把明确的思想注入到到系统，就会产出价值。应用前六个原则需要深入的思考，当然潜在的回报也是不可估量。<br><img src="http://static.codeceo.com/images/2018/05/7-principles-9.png" alt="Principle #7: Think!（思考）"></p>
+<p>原文地址：<a href="http://www.codeceo.com/article/7-principles-software-develop.html" target="_blank" rel="noopener">http://www.codeceo.com/article/7-principles-software-develop.html</a><br>译文作者：Snailclimb</p>
+<blockquote>
+<p>我是Snailclimb,一个以架构师为5年之内目标的小小白。 欢迎关注我的微信公众号:”<strong>Java面试通关手册</strong>“（一个有温度的微信公众号，期待与你共同进步~~~坚持原创，分享美文，分享各种Java学习资源)</p>
+</blockquote>
+<p>最后，就是使用阿里云服务器一段时间后，感觉阿里云真的很不错，就申请做了阿里云大使，然后这是<a href="https://promotion.aliyun.com/ntms/act/ambassador/sharetouser.html?userCode=hf47liqn&amp;utm_source=hf47liqn" target="_blank" rel="noopener">我的优惠券地址</a>.</p>
+
+  </article>
+  <div class="random-toc-area">
+  <button class="btn-hide-toc btn-hide-toc-show" style="display: none" onclick="TOCToggle()">Show TOC</button>
+  <button class="btn-hide-toc btn-hide-toc-hide" onclick="TOCToggle()">Hide TOC</button>
+  <div class="random-toc">
+    <h2>Table of Content</h2>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#原则-1：The-Reason-It-All-Exists-它存在的原因"><span class="toc-text">原则 #1：The Reason It All Exists(它存在的原因)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原则-2：KISS-Keep-It-Simple-Stupid"><span class="toc-text">原则 #2：KISS(Keep It Simple, Stupid! )</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原则-3：Maintain-the-vision-保持愿景"><span class="toc-text">原则 #3：Maintain the vision(保持愿景)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原则-4：What-you-produce-others-will-consume-生产其他人消费的东西"><span class="toc-text">原则 #4：What you produce others will consume(生产其他人消费的东西</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Principle-5-Be-open-to-the-future（面向未来）"><span class="toc-text">Principle #5: Be open to the future（面向未来）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Principle-6-Plan-Ahead-for-Reuse-未雨绸缪，提前计划重用"><span class="toc-text">Principle #6: Plan Ahead for Reuse(未雨绸缪，提前计划重用)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Principle-7-Think-（思考，三思而后行）"><span class="toc-text">Principle #7: Think!（思考，三思而后行）</span></a></li></ol>
+  </div>
+</div>
+
+  
+<nav id="pagination">
+  
+
+  
+
+  
+    <a href="/2018/05/21/深入理解单例模式/" class="next">Next post 深入理解单例模式 &rarr;</a>
+  
+</nav>
+
+  <!-- JiaThis Button BEGIN -->
+
+<!-- JiaThis Button END -->
+
+
+      
+      
+    </div>
+  </div>
+
+  <div id="bottom-outer">
+    <div id="bottom-inner">
+      Site by Snailclimb using
+      <a href="http://hexo.io">Hexo</a> & <a href="https://github.com/stiekel/hexo-theme-random">Random</a>
+      <br>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="user-card">
+  <div class="center-field">
+    <img class="avatar" src="http://my-blog-to-use.oss-cn-beijing.aliyuncs.com/18-5-5/71497740.jpg">
+    <p id="description">一个在渴望称为架构师的蜗牛。欢迎关注我的微信公众号：“Java面试通关手册”，一个有温度的微信公众号。</p>
+    <ul class="social-icon">
+  
+  
+    <li>
+      <a href="https://github.com/Snailclimb">
+        
+          <i class="icon iconfont github">&#xe606;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.zhihu.com/people/kou-shuang-1/activities">
+        
+          <i class="icon iconfont zhihu">&#xe60b;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.weibo.com/">
+        
+          <i class="icon iconfont weibo">&#xe602;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://www.douban.com/">
+        
+          <i class="icon iconfont douban">&#xe60f;</i>
+        
+      </a>
+    </li>
+  
+    <li>
+      <a href="https://coding.net/u/Stiekel">
+        
+          <i class="icon iconfont coding">&#xe607;</i>
+        
+      </a>
+    </li>
+  
+</ul>
+  </div>
+</div>
+
+
+<div id="btn-view">Hide</div>
+
+<script>
+// is trigger analytics / tongji script
+var isIgnoreHost = false;
+
+if(window && window.location && window.location.host) {
+  isIgnoreHost = ["localhost","127.0.0.1"].some(function(address){
+    return 0 === window.location.host.indexOf(address);
+  });
+}
+
+var isTriggerAnalytics = !( true && isIgnoreHost );
+
+</script>
+
+  <script>
+if(isTriggerAnalytics) {
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?cc616a842d002179ef35e68dc24fdc5c";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+</script>
+
+
+
+
+
+  
+  
+    <script src="/js/jquery-2.2.3.min.js"></script>
+  
+    <script src="/js/vegas.min.js"></script>
+  
+    <script src="/js/random.js"></script>
+  
+    <script src="/js/highlight.pack.js"></script>
+  
+    <script src="/js/jquery.mousewheel.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox.pack.js"></script>
+  
+    <script src="/js/jquery.fancybox-thumbs.js"></script>
+  
+    <script src="/js/plyr.js"></script>
+  
+
+<script>
+
+  // fancybox
+  var backgroundImages = [];
+  
+  $('#post').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox') || $(this).parent().hasClass('fancybox-thumb')) return;
+      var alt = this.alt || this.title;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'post' + i);
+    });
+  });
+  $(".fancybox").fancybox();
+
+var vegasConfig = {"preload­Image":true,"transition":["slideLeft2","slideRight2","flash2"],"timer":true,"delay":5000,"shuffle":true,"count":28};
+var unsplashConfig = {"gravity":"north"};
+// is show background images
+var turnoffBackgroundImage = false;
+
+
+
+  turnoffBackgroundImage = true;
+
+
+var backgroundColor = "34495E";
+
+$(".fancybox-thumb").fancybox({
+  prevEffect: 'none',
+  nextEffect: 'none',
+  helpers: {
+    title: {
+      type: 'outside'
+    },
+    thumbs: {
+      width: 50,
+      height: 50
+    }
+  }
+});
+
+// show video with plyr
+$(".video-container iframe").each(function(i){
+  var url = $(this).attr('src');
+  var id = url.split('/').pop();
+  var plyrContainer = document.createElement('div');
+  plyrContainer.className = 'plyr';
+  var plyrElement = document.createElement('div');
+  plyrElement.dataset.videoId = id;
+  switch(true) {
+    case url.search('youtube.com') >= 0:
+      plyrElement.dataset.type = 'youtube';
+      break;
+    case url.search('vimeo.com') >= 0:
+      plyrElement.dataset.type = 'vimeo';
+      break;
+    default:
+      return;
+  };
+  plyrContainer.appendChild(plyrElement);
+  $(this).parent().html(plyrContainer);
+});
+plyr.setup('.plyr', {iconUrl: '/css/sprite.svg'});
+</script>
+</body>
+</html>
+
