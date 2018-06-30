@@ -12,10 +12,6 @@
         }
         body {
             font-family: "Helvetica Neue", "Luxi Sans", "DejaVu Sans", Tahoma, "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
-            background: #79a8ae;
-            color: #CFEBE4;
-            font-size: 18px;
-            line-height: 2;
             letter-spacing: 1.2px;
             margin: 0;
         }
@@ -23,18 +19,47 @@
             color: #ebf7f4;
         }
         .body--ready {
+            background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 0%);
+            background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 0%);
+            background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 0%);
+            background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 0%);
+            background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 0%);
+        }
+         .body--ready1 {
+            background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 30%);
+            background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 30%);
+            background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 30%);
+            background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 30%);
+            background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 30%);
+        }
+        .body--ready2 {
+            background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 60%);
+            background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 60%);
+            background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 60%);
+            background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 60%);
+            background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 60%);
+        }
+        .body--ready3 {
+            background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 90%);
+            background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 90%);
+            background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 90%);
+            background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 90%);
+            background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 90%);
+        }
+
+        .body--ready4 {
             background: -webkit-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
             background: -moz-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
             background: -o-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
             background: -ms-linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
             background: linear-gradient(top, rgb(203, 235, 219) 0%, rgb(55, 148, 192) 120%);
-        }
-        .text {
-            position: fixed;
-            bottom: 100px;
-            text-align: center;
-            width: 100%;
-        }
+        }                
+/*         .text {
+    position: fixed;
+    bottom: 100px;
+    text-align: center;
+    width: 100%;
+} */
         .canvas {
             margin: 0 auto;
             display: block;
@@ -135,22 +160,26 @@
     var S = {
         init: function () {
             S.Drawing.init('.canvas');
-            document.body.classList.add('body--ready');
             var a =Math.floor(Math.random() * 5+1);
 			//想说的话
             if (a==1) {
-               alert("你要吃的我都做~"); 
-               S.UI.simulate("傻欢|遇见你|很幸运|#time");
+                document.body.classList.add('body--ready');
+                alert("你要吃的我都做~"); 
+                S.UI.simulate("傻欢|遇见你|很幸运|#time");
             }else if (a==2){
+                document.body.classList.add('body--ready1');
                 alert("你想去的地方我都陪你去~");
                 S.UI.simulate("傻儿子|我爱你|#time");               
             }else if (a==3) {
+                 document.body.classList.add('body--ready2');
                  alert("你想做的事情我都陪你做~");
                  S.UI.simulate("Nice|to|Meet|You|#countdown 3|#time");                
             }else if (a==4) {
+                 document.body.classList.add('body--ready3');
                  alert("任何时候记住你都有我，我爱你，超级超级超级爱你~");
                  S.UI.simulate("傻欢|以后的路|我|陪着|你|走|#countdown 3|#time");
             }else{
+                 document.body.classList.add('body--ready4');
                  alert("大傻子，我爱你哦~");
                  S.UI.simulate("大傻子");                
             }
